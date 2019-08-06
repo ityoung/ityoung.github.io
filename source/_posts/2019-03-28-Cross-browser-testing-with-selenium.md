@@ -28,8 +28,8 @@ categories:     自动化测试
 
 通过Selenium控制浏览器模拟人工操作的过程如下:
 
+![Selenium工作原理](/img/in-post/article-cross-browser-testing-with-selenium/Selenium.png)
 <center>
-![Selenium工作原理](/img/in-post/article-Cross-browser-testing-with-selenium/Selenium.png)
 <small>图1.1-Selenium原理</small>
 </center>
 
@@ -51,8 +51,8 @@ Selenium 客户端(如本项目)运行在hub上, 通过Selenium Grid将操作浏
 
 主从结构的优势在于, 无需在所有从节点上配置执行环境(如Python和Selenium库), 即可直接执行主节点发来的执行指令.
 
+![Selenium Grid架构图](/img/in-post/article-cross-browser-testing-with-selenium/Selenium.png)
 <center>
-![Selenium Grid架构图](/img/in-post/article-Cross-browser-testing-with-selenium/Selenium.png)
 <small>图2.1-测试环境架构图</small>
 </center>
 

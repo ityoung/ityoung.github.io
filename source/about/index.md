@@ -4,23 +4,19 @@ title: About
 
 ## 自我介绍
 
-花名严北，测试开发工程师一枚，现居武汉。
+花名严北，测试开发工程师，现居武汉。
 
-热爱Python，正在学习更多优秀的用法与特性，以及机器学习。
+热爱Python，正在学习更多优秀的用法与特性。
 
 坚持阅读与学习，未来不可期，唯有进取。
 
-写博客在于记录点滴经验，也希望有人能因为我的分享而变得更好。
-
-**简书专题**：[测试开发实践](https://www.jianshu.com/c/b4b2bd0cb60d)
+写博客在于记录点滴经验，也希望我的分享能让你有所收获。
 
 ---
 
 ## 简历
 
- [中文简历](/resume.html) | [Resume](/resume_en.html)
-
-求职状态： **在职， 不考虑换工作**
+ [在线简历](https://www.wondercv.com/cvs/95dZ85M/share) | **在职， 不考虑换工作**
 
 ---
 
@@ -30,7 +26,7 @@ title: About
 <a><center><img src="qqgroup-qrcode.jpg" />QQ群</center></a>
 </td>
 <td>
-<a><center><img src="wechat-qrcode.jpg" />加微信拉你进群</center></a>
+<a><center><img src="wechat-qrcode.jpg" />加微信进群</center></a>
 </td>
 </tr>
 </table>
