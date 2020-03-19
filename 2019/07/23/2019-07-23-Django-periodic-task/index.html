@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Python,Django,后端开发," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="背景在开发后台与任务相关的功能中，遇到一个需求：用户需要能够为任务配置定时策略，使任务定时执行某个操作。 需求分析根据需求，我们可以拆解成如下几个步骤：  「某个操作」的实现 配置为定时任务 定时策略可配置 用户体验好">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Django - 定时任务模块设计与实现">
+<meta property="og:url" content="http://intest.tech/2019/07/23/2019-07-23-Django-periodic-task/index.html">
+<meta property="og:site_name" content="Shin&#39;s Blog">
+<meta property="og:description" content="背景在开发后台与任务相关的功能中，遇到一个需求：用户需要能够为任务配置定时策略，使任务定时执行某个操作。 需求分析根据需求，我们可以拆解成如下几个步骤：  「某个操作」的实现 配置为定时任务 定时策略可配置 用户体验好">
+<meta property="og:image" content="https://user-gold-cdn.xitu.io/2019/7/23/16c1d6d53c87ef6e?w=718&h=224&f=png&s=16087">
+<meta property="og:image" content="http://intest.tech/img/in-post/article-django-periodic-task/periodic-fe.png">
+<meta property="og:image" content="https://user-gold-cdn.xitu.io/2019/7/23/16c1d87f48378763?w=262&h=253&f=png&s=19002">
+<meta property="og:image" content="https://user-gold-cdn.xitu.io/2019/7/23/16c1d88a7b797bea?w=268&h=455&f=png&s=34145">
+<meta property="article:published_time" content="2019-07-22T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-03-19T05:22:27.712Z">
+<meta property="article:author" content="严北">
+<meta property="article:tag" content="Python">
+<meta property="article:tag" content="Django">
+<meta property="article:tag" content="后端开发">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://user-gold-cdn.xitu.io/2019/7/23/16c1d6d53c87ef6e?w=718&h=224&f=png&s=16087">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://intest.tech/2019/07/23/2019-07-23-Django-periodic-task/"/>
+
+
+
+
+
+  <title>Django - 定时任务模块设计与实现 | Shin's Blog</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Shin's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Aims at Test Architect</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://intest.tech/2019/07/23/2019-07-23-Django-periodic-task/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="严北">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar-me.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Shin's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Django - 定时任务模块设计与实现</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-07-23T00:00:00+08:00">
+                2019-07-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Python/" itemprop="url" rel="index">
+                    <span itemprop="name">Python</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>在开发后台与任务相关的功能中，遇到一个需求：用户需要能够为任务配置定时策略，使任务定时执行某个操作。</p>
+<h2 id="需求分析"><a href="#需求分析" class="headerlink" title="需求分析"></a>需求分析</h2><p>根据需求，我们可以拆解成如下几个步骤：</p>
+<ol>
+<li>「某个操作」的实现</li>
+<li>配置为定时任务</li>
+<li>定时策略可配置</li>
+<li>用户体验好</li>
+</ol>
+<a id="more"></a>
+
+<p>其中步骤 1 与本文无关不提；对于定时任务的实现，在上节 <a href="https://juejin.im/post/5d043d28e51d4510bf1d666e" target="_blank" rel="noopener">Celery异步任务队列
+</a> 有简单提到 celery 也支持定时任务。</p>
+<p>Celery 的定时任务策略配置于代码中，在启动 celery 时写入本地 <a href="https://docs.python.org/dev/library/shelve.html#module-shelve" target="_blank" rel="noopener">shelve</a> 文件，不利于管理。</p>
+<p>因此在 celery 的文档中也提到一个扩展模块 <code>django-celery-beat</code>，该模块将定时任务的配置写入 Django 配置的数据库中，当程序启动后可以通过 <code>admin</code> 后台进行管理，并且可以直接通过 ORM 对定时任务配置进行修改，无需修改代码然后重启 celery，符合我们预期。</p>
+<p>当然还有很多其他库也能实现，因为我们已经使用 celery 执行异步任务，所以本文还是用 <code>django-celery-beat</code> 解决问题。</p>
+<p>Celery 的定时任务使用的是类似 <code>crontab</code> 的语法，因此在用户体验上，要考虑普通用户的学习成本，可以提供一些常用的配置，例如每周的工作日每天 1 点执行任务；也要考虑后期的扩展性，可以提供输入框方便配置。</p>
+<h2 id="设计与实现"><a href="#设计与实现" class="headerlink" title="设计与实现"></a>设计与实现</h2><h3 id="基本用法"><a href="#基本用法" class="headerlink" title="基本用法"></a>基本用法</h3><h4 id="定时策略（CrontabSchedule）"><a href="#定时策略（CrontabSchedule）" class="headerlink" title="定时策略（CrontabSchedule）"></a>定时策略（CrontabSchedule）</h4><p><code>CrontabSchedule</code> 支持类 crontab 语法，同样是 5 个配置域，分别为：</p>
+<ul>
+<li>分</li>
+<li>时</li>
+<li>每周中的天</li>
+<li>每月中的天</li>
+<li>每年中的月</li>
+</ul>
+<p>每个配置域使用空格隔开。</p>
+<p>对每个配置域常用语法：</p>
+<ul>
+<li><code>*</code>: 范围内的所有值</li>
+<li><code>M-N</code>: M到N之间的值</li>
+<li><code>M-N/X</code> 或 <code>*/X</code>: 每X分钟、每X天等等</li>
+<li><code>A,B,...,Z</code>: 枚举的值</li>
+</ul>
+<p>举个例子：<br>每个工作日1点执行：<code>0 1 1-5 * *</code></p>
+<p>创建定时策略代码如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> django_celery_beat.models <span class="keyword">import</span> CrontabSchedule, PeriodicTask</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>schedule, _ = CrontabSchedule.objects.get_or_create(</span><br><span class="line"><span class="meta">... </span>    minute=<span class="string">'30'</span>,</span><br><span class="line"><span class="meta">... </span>    hour=<span class="string">'*'</span>,</span><br><span class="line"><span class="meta">... </span>    day_of_week=<span class="string">'*'</span>,</span><br><span class="line"><span class="meta">... </span>    day_of_month=<span class="string">'*'</span>,</span><br><span class="line"><span class="meta">... </span>    month_of_year=<span class="string">'*'</span>,</span><br><span class="line"><span class="meta">... </span>)</span><br></pre></td></tr></table></figure>
+
+<h4 id="定时任务"><a href="#定时任务" class="headerlink" title="定时任务"></a>定时任务</h4><p>定时任务可以依赖不同的定时策略，例如 crontab, interval 等，创建时指定 <code>schedule</code> 即可。以 crontab 定时任务为例：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span> json</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">from</span> datetime <span class="keyword">import</span> datetime, timedelta</span><br><span class="line"></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>PeriodicTask.objects.create(</span><br><span class="line"><span class="meta">... </span>    crontab=schedule,                  <span class="comment"># we created this above.</span></span><br><span class="line"><span class="meta">... </span>    name=<span class="string">'Importing contacts'</span>,          <span class="comment"># simply describes this periodic task.</span></span><br><span class="line"><span class="meta">... </span>    task=<span class="string">'proj.tasks.import_contacts'</span>,  <span class="comment"># name of task.</span></span><br><span class="line"><span class="meta">... </span>    args=json.dumps([<span class="string">'arg1'</span>, <span class="string">'arg2'</span>]),</span><br><span class="line"><span class="meta">... </span>    kwargs=json.dumps(&#123;</span><br><span class="line"><span class="meta">... </span>       <span class="string">'be_careful'</span>: <span class="literal">True</span>,</span><br><span class="line"><span class="meta">... </span>    &#125;),</span><br><span class="line"><span class="meta">... </span>    expires=datetime.utcnow() + timedelta(seconds=<span class="number">30</span>)</span><br><span class="line"><span class="meta">... </span>)</span><br></pre></td></tr></table></figure>
+
+<p>其中 <code>name</code> 为定时任务的名称，每个任务名必须唯一；<code>task</code> 为需要执行的 celery 任务。加上定时策略调度器，这三个是一个定时任务所必须的属性。</p>
+<p>定时任务还有其他配置，如 <code>args</code>/<code>kwargs</code> 对应一个 celery 任务的入参；<code>expires</code> 设置了该定时任务的过期时间。</p>
+<h3 id="Django配置"><a href="#Django配置" class="headerlink" title="Django配置"></a>Django配置</h3><p>最基础的配置只需要在 <code>INSTALLED_APPS</code> 中添加引用，并设置定时任务调度器即可：</p>
+<p><em>settings.py</em></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">INSTALLED_APPS = [</span><br><span class="line">    ...</span><br><span class="line">    <span class="string">'django_celery_beat'</span></span><br><span class="line">]</span><br><span class="line"></span><br><span class="line"><span class="comment"># 配置 celery 定时任务使用的调度器</span></span><br><span class="line">CELERY_BEAT_SCHEDULER = <span class="string">'django_celery_beat.schedulers:DatabaseScheduler'</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="时区问题"><a href="#时区问题" class="headerlink" title="时区问题"></a>时区问题</h4><p>在使用 <code>django-celery-beat</code> 过程中遇到两个关于时区的问题：</p>
+<ol>
+<li>创建的定时任务，实际触发时间与配置的时间存在8小时时间差</li>
+</ol>
+<p><strong>解决方案：</strong></p>
+<p>8小时明显是因为时区不同导致，而 <code>django-celery-beat</code> 对时区的处理似乎总有问题（若不对请指教）。</p>
+<p>修改 <code>settings.py</code> 中的时区配置：</p>
+<p><em>settings.py</em></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 设置 Django 大部分应用通用的时区</span></span><br><span class="line">TIME_ZONE = <span class="string">'Asia/Shanghai'</span></span><br><span class="line"><span class="comment"># 关闭 UTC</span></span><br><span class="line">USE_TZ = <span class="literal">False</span></span><br><span class="line">CELERY_ENABLE_UTC = <span class="literal">False</span></span><br><span class="line"><span class="comment"># 设置 django-celery-beat 真正使用的时区</span></span><br><span class="line">CELERY_TIMEZONE = TIME_ZONE</span><br><span class="line"><span class="comment"># 使用 timezone naive 模式</span></span><br><span class="line">DJANGO_CELERY_BEAT_TZ_AWARE = <span class="literal">False</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>关于 timezone naive 与 timezone aware 模式的区别可以参考文章：<a href="https://blog.csdn.net/laughing2333/article/details/53513414" target="_blank" rel="noopener">Django时区详解</a></p>
+<p>简单来说就是，naive 模式不存储时区信息，只存储经过时区转换后的时间；反之 aware 模式则存储了 UTC 时间和 UTC 时区信息。</p>
+</blockquote>
+<p>根据<a href="https://django-celery-beat.readthedocs.io/en/latest/#important-warning-about-time-zones" target="_blank" rel="noopener">文档</a>，在修改了时区后，需要将已执行过的定时任务的 <code>last_run_at</code> 重置为 <code>None</code>：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">python manage.py shell</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">from</span> django_celery_beat.models <span class="keyword">import</span> PeriodicTask</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>PeriodicTask.objects.all().update(last_run_at=<span class="literal">None</span>)</span><br></pre></td></tr></table></figure>
+
+<p>修改完成后，重启 <code>celery beat</code>。</p>
+<blockquote>
+<p>PS: 就算是经过这样配置，我也仍然遇到了任务不断执行的问题，并且在我多次重启 celery 后不再复现，因此本配置可能还有问题。</p>
+</blockquote>
+<ol start="2">
+<li>数据库中，<code>CrontabSchedule</code> 的 <code>timezone</code> 配置始终是 <code>UTC</code></li>
+</ol>
+<p><strong>解决方案：</strong></p>
+<p>查看 <code>CrontabSchedule</code> 模型的源码，找到数据库中 <code>timezone</code> 字段的属性：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">CrontabSchedule</span><span class="params">(models.Model)</span>:</span></span><br><span class="line">    ...</span><br><span class="line">    timezone = timezone_field.TimeZoneField(</span><br><span class="line">        default=<span class="string">'UTC'</span>,</span><br><span class="line">        verbose_name=_(<span class="string">'Cron Timezone'</span>),</span><br><span class="line">        help_text=_(</span><br><span class="line">            <span class="string">'Timezone to Run the Cron Schedule on.  Default is UTC.'</span>),</span><br><span class="line">    )</span><br></pre></td></tr></table></figure>
+
+<p>由于我们在创建 <code>CrontabSchedule</code> 实例时并未指定 <code>timezone</code>，因此在创建任务时，添加该字段的配置即可：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> django_celery_beat.models <span class="keyword">import</span> CrontabSchedule</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>schedule, _ = CrontabSchedule.objects.get_or_create(</span><br><span class="line"><span class="meta">... </span>    minute=<span class="string">'30'</span>,</span><br><span class="line"><span class="meta">... </span>    hour=<span class="string">'*'</span>,</span><br><span class="line"><span class="meta">... </span>    day_of_week=<span class="string">'*'</span>,</span><br><span class="line"><span class="meta">... </span>    day_of_month=<span class="string">'*'</span>,</span><br><span class="line"><span class="meta">... </span>    month_of_year=<span class="string">'*'</span>,</span><br><span class="line"><span class="meta">... </span>    timezone=<span class="string">'Asia/Shanghai'</span></span><br><span class="line"><span class="meta">... </span>)</span><br></pre></td></tr></table></figure>
+
+<h3 id="业务前后端设计"><a href="#业务前后端设计" class="headerlink" title="*业务前后端设计"></a>*业务前后端设计</h3><blockquote>
+<p>本节内容仅供参考，不一定适用其他场景。</p>
+</blockquote>
+<h4 id="前端"><a href="#前端" class="headerlink" title="前端"></a>前端</h4><p>设计前端定时任务配置项，包含一个开关，一个三选一单选组件，以及一个输入框：</p>
+<p><img src="https://user-gold-cdn.xitu.io/2019/7/23/16c1d6d53c87ef6e?w=718&h=224&f=png&s=16087" alt=""></p>
+<p>为了方便非技术人员设置定时任务，优化用户体验，定时任务除了「自定义」的输入模式，还有一个「每天」与「每周」的选项：</p>
+<ul>
+<li>每天：<code>0 1 1-5 * *</code></li>
+<li>每周：<code>0 1 1 * *</code></li>
+</ul>
+<p>单选框与字符串双向绑定，在后端返回上面两个字符串之一时选中每天或每周，否则选中自定义选项。</p>
+<h4 id="后端"><a href="#后端" class="headerlink" title="后端"></a>后端</h4><p>假设对于我的业务来说，前端需要的任务数据字段为：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">"task_id"</span>: <span class="number">1</span>,</span><br><span class="line">    <span class="attr">"is_periodic_task"</span>: <span class="literal">true</span>,</span><br><span class="line">    <span class="attr">"periodic_task_id"</span>: <span class="number">1</span>,</span><br><span class="line">    <span class="attr">"crontab"</span>: <span class="string">"* * * * *"</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>ER 模型如图：</p>
+<p><img src="/img/in-post/article-django-periodic-task/periodic-fe.png" alt=""></p>
+<p>返回给前端的数据中，若 <code>periodic_task</code> 不为空，则 <code>is_periodic_task</code> 为 <code>True</code>，并通过 <code>periodic_task.crontab_id</code> 获取到 <code>CrontabSchedule</code> 实例，转化为字符串返回。</p>
+<p>要注意，<code>CrontabSchedule</code> 的 <code>__str__</code> 方法除了返回 <code>crontab</code> 配置，还会返回时区等信息，而这些信息前端展示时并不需要。</p>
+<p>因此可以新建一个方法：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">get_crontab_str</span><span class="params">(contab)</span> -&gt; str:</span></span><br><span class="line">    <span class="string">"""</span></span><br><span class="line"><span class="string">    获取前端配置需要的 5 项值</span></span><br><span class="line"><span class="string">    :param contab: CrontabSchedule对象</span></span><br><span class="line"><span class="string">    :return:</span></span><br><span class="line"><span class="string">    """</span></span><br><span class="line">    <span class="keyword">return</span> <span class="string">'&#123;0&#125; &#123;1&#125; &#123;2&#125; &#123;3&#125; &#123;4&#125;'</span>.format(</span><br><span class="line">        cronexp(contab.minute), cronexp(contab.hour),</span><br><span class="line">        cronexp(contab.day_of_week), cronexp(contab.day_of_month),</span><br><span class="line">        cronexp(contab.month_of_year)</span><br><span class="line">    )</span><br></pre></td></tr></table></figure>
+
+<p>序列化时调用该方法返回给前端即可。</p>
+<h5 id="修改任务"><a href="#修改任务" class="headerlink" title="修改任务"></a>修改任务</h5><p>修改任务包括以下三种情况</p>
+<ol>
+<li>从定时任务改为非定时任务</li>
+<li>从非定时任务改为定时任务</li>
+<li>在定时任务基础上修改定时策略</li>
+</ol>
+<p>对应流程图如下：</p>
+<p>1:<br><img src="https://user-gold-cdn.xitu.io/2019/7/23/16c1d87f48378763?w=262&h=253&f=png&s=19002" alt=""></p>
+<p>2, 3:<br><img src="https://user-gold-cdn.xitu.io/2019/7/23/16c1d88a7b797bea?w=268&h=455&f=png&s=34145" alt=""></p>
+<blockquote>
+<p>图中「修改配置中的」指前端传来的修改请求中的新配置信息</p>
+</blockquote>
+<p>具体代码就不赘述，只提一下暂停定时任务的方法：</p>
+<p>修改 <code>PeriodicTask.objects.enabled</code> 为 <code>False/0</code> 即可</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>periodic_task.enabled = <span class="literal">False</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>periodic_task.save()</span><br></pre></td></tr></table></figure>
+
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>Django 实现网页端配置定时任务的功能实现大抵如此，可惜 Django 及其插件对时区的配置比较复杂，花了很多时间踩了很多坑都还是有些问题没能搞清楚。继续探索吧！</p>
+<h2 id="版本说明"><a href="#版本说明" class="headerlink" title="版本说明"></a>版本说明</h2><table>
+<thead>
+<tr>
+<th>框架/服务/组件</th>
+<th>版本</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Python</td>
+<td>3.6.7</td>
+<td></td>
+</tr>
+<tr>
+<td>Django</td>
+<td>2.2</td>
+<td></td>
+</tr>
+<tr>
+<td>RabbitMQ</td>
+<td>3</td>
+<td></td>
+</tr>
+<tr>
+<td>Celery</td>
+<td>4.3</td>
+<td></td>
+</tr>
+<tr>
+<td>django-celery-beat</td>
+<td>1.5.0</td>
+<td></td>
+</tr>
+</tbody></table>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ol>
+<li><a href="http://docs.celeryproject.org/en/latest/userguide/periodic-tasks.html" target="_blank" rel="noopener">http://docs.celeryproject.org/en/latest/userguide/periodic-tasks.html</a></li>
+<li><a href="https://django-celery-beat.readthedocs.io/en/latest/" target="_blank" rel="noopener">https://django-celery-beat.readthedocs.io/en/latest/</a></li>
+<li><a href="https://docs.djangoproject.com/en/2.2/topics/i18n/timezones/" target="_blank" rel="noopener">https://docs.djangoproject.com/en/2.2/topics/i18n/timezones/</a></li>
+<li><a href="https://blog.csdn.net/laughing2333/article/details/53513414" target="_blank" rel="noopener">https://blog.csdn.net/laughing2333/article/details/53513414</a></li>
+</ol>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Python/" rel="tag"># Python</a>
+          
+            <a href="/tags/Django/" rel="tag"># Django</a>
+          
+            <a href="/tags/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/" rel="tag"># 后端开发</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/06/22/2019-06-22-Docker-swarm-in-action/" rel="next" title="用Docker swarm实现容器服务高可用">
+                <i class="fa fa-chevron-left"></i> 用Docker swarm实现容器服务高可用
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/08/04/2019-08-04-Django-RBAC/" rel="prev" title="Django - 权限系统设计与实现">
+                Django - 权限系统设计与实现 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar-me.jpg"
+                alt="严北" />
+            
+              <p class="site-author-name" itemprop="name">严北</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%7C%7Carchive">
+              
+                  <span class="site-state-item-count">28</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">10</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">34</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/ityoung" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://juejin.im/user/5a9ea689f265da23906b89e1" target="_blank" title="掘金">
+                      
+                        <i class="fa fa-fw fa-custom icon-juejin"></i>掘金</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#背景"><span class="nav-number">1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#需求分析"><span class="nav-number">2.</span> <span class="nav-text">需求分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#设计与实现"><span class="nav-number">3.</span> <span class="nav-text">设计与实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#基本用法"><span class="nav-number">3.1.</span> <span class="nav-text">基本用法</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#定时策略（CrontabSchedule）"><span class="nav-number">3.1.1.</span> <span class="nav-text">定时策略（CrontabSchedule）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#定时任务"><span class="nav-number">3.1.2.</span> <span class="nav-text">定时任务</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Django配置"><span class="nav-number">3.2.</span> <span class="nav-text">Django配置</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#时区问题"><span class="nav-number">3.2.1.</span> <span class="nav-text">时区问题</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#业务前后端设计"><span class="nav-number">3.3.</span> <span class="nav-text">*业务前后端设计</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#前端"><span class="nav-number">3.3.1.</span> <span class="nav-text">前端</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#后端"><span class="nav-number">3.3.2.</span> <span class="nav-text">后端</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#修改任务"><span class="nav-number">3.3.2.1.</span> <span class="nav-text">修改任务</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#版本说明"><span class="nav-number">5.</span> <span class="nav-text">版本说明</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">6.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">严北</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+          <span id="scrollpercent"><span>0</span>%</span>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

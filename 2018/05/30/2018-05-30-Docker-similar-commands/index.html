@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Docker," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="kill vs stop两个命令都是停止docker，不同之处在于：  docker stop: 先发SIGTERM信号给docker，允许其在一定时间（默认10s）内进行一些操作（例如资源回收），若这段时间内容器未停止，则发送SIGKILL信号强行杀死容器； docker kill: 直接发送SIGKILL信号杀死容器。  SIGTERM与SIGKILL的区别在于，前者是告知你的租期到了，请你赶">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Docker - 相似的命令">
+<meta property="og:url" content="http://intest.tech/2018/05/30/2018-05-30-Docker-similar-commands/index.html">
+<meta property="og:site_name" content="Shin&#39;s Blog">
+<meta property="og:description" content="kill vs stop两个命令都是停止docker，不同之处在于：  docker stop: 先发SIGTERM信号给docker，允许其在一定时间（默认10s）内进行一些操作（例如资源回收），若这段时间内容器未停止，则发送SIGKILL信号强行杀死容器； docker kill: 直接发送SIGKILL信号杀死容器。  SIGTERM与SIGKILL的区别在于，前者是告知你的租期到了，请你赶">
+<meta property="article:published_time" content="2018-05-29T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-03-19T05:22:27.705Z">
+<meta property="article:author" content="严北">
+<meta property="article:tag" content="Docker">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://intest.tech/2018/05/30/2018-05-30-Docker-similar-commands/"/>
+
+
+
+
+
+  <title>Docker - 相似的命令 | Shin's Blog</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Shin's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Aims at Test Architect</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://intest.tech/2018/05/30/2018-05-30-Docker-similar-commands/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="严北">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar-me.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Shin's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Docker - 相似的命令</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-30T00:00:00+08:00">
+                2018-05-30
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Docker/" itemprop="url" rel="index">
+                    <span itemprop="name">Docker</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="kill-vs-stop"><a href="#kill-vs-stop" class="headerlink" title="kill vs stop"></a>kill vs stop</h2><p>两个命令都是停止docker，不同之处在于：</p>
+<ul>
+<li><code>docker stop</code>: 先发<code>SIGTERM</code>信号给docker，允许其在一定时间（默认10s）内进行一些操作（例如资源回收），若这段时间内容器未停止，则发送<code>SIGKILL</code>信号强行杀死容器；</li>
+<li><code>docker kill</code>: 直接发送<code>SIGKILL</code>信号杀死容器。</li>
+</ul>
+<p><code>SIGTERM</code>与<code>SIGKILL</code>的区别在于，前者是告知你的租期到了，请你赶紧收拾行李离开；后者是你的租期到了，直接将你扫地出门。</p>
+<p>简而言之，相比kill，stop给了容器自行处理结束的时间，<strong>更为优雅</strong>。</p>
+<h2 id="run-vs-start"><a href="#run-vs-start" class="headerlink" title="run vs start"></a>run vs start</h2><ul>
+<li><code>docker run</code>: 从镜像启动一个容器;</li>
+<li><code>docker start</code>: 运行已停止的容器。</li>
+</ul>
+<a id="more"></a>
+
+<p>例如你需要从<code>docker images</code>列表中启动一个镜像，你需要执行</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run &lt;IMAGE ID&gt;</span><br></pre></td></tr></table></figure>
+
+<p>你在该镜像中做了某些修改，然后结束（kill/stop）该容器，通过<code>docker ps -a</code>可以看到一个状态为<em>EXITED</em>的容器，此时你可以通过执行</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker start &lt;CONTAINER ID&gt;</span><br></pre></td></tr></table></figure>
+
+<p>再次启动该容器。通过start启动的容器会保留上一次结束前做的变动，不会像run一样执行的是全新的容器。</p>
+<h2 id="export-vs-save"><a href="#export-vs-save" class="headerlink" title="export vs save"></a>export vs save</h2><ul>
+<li><code>docker export</code>: 持久化<strong>容器</strong>，类似给一个虚拟机打快照，会保留容器启动后的一系列修改；</li>
+<li><code>docker save</code>: 持久化一个<strong>镜像</strong>，只是将镜像导出，如果通过镜像启动容器，那么容器中的修改并不会写入镜像中，也因此不会被save。</li>
+</ul>
+<p>要注意的是，export导出后的镜像会丢失历史，等于没法回滚到以前的某个状态，而save则保留全部的历史；也因此，export导出后的镜像更小。</p>
+<p>另外，export一次只能导出一个容器，而save可以一次性导出多个镜像。</p>
+<p>实际使用中，仅仅导出镜像使用save，而如果对容器做了修改后需要保存，可以export，也可以先commit再save。</p>
+<h2 id="import-vs-load"><a href="#import-vs-load" class="headerlink" title="import vs load"></a>import vs load</h2><ul>
+<li><code>docker import</code>: 从一个tar包创建一个镜像，可以指定新的NAME:TAG；</li>
+<li><code>docker load</code>: 可以同时将多个tar包导入到仓库中，不可指定新的NAME:TAG。</li>
+</ul>
+<p>二者几乎与export/save相呼应，若将save保存的tar包镜像用import导入回去，那么新生成的镜像会丢失原来镜像的历史。</p>
+<h2 id="rm-vs-rmi"><a href="#rm-vs-rmi" class="headerlink" title="rm vs rmi"></a>rm vs rmi</h2><ul>
+<li><code>docker rm &lt;CONTAINER ID&gt;</code>: 删除容器</li>
+<li><code>docker rmi &lt;IMAGE ID&gt;</code>: 删除镜像</li>
+</ul>
+<h2 id="image-vs-container"><a href="#image-vs-container" class="headerlink" title="image vs container"></a>image vs container</h2><p>如果你是一个刚接触Docker的新手，那么你可能会对这两者有疑惑。</p>
+<p>其实很容易区分二者，<code>image</code>即镜像，类似操作系统的iso文件，而<code>container</code>则是用这iso文件安装好的一个操作系统。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>[1] <a href="https://docs.docker.com/engine/reference/commandline/cli/" target="_blank" rel="noopener">Use the Docker command line</a>, Docker Documentation<br>[2] <a href="https://superuser.com/questions/756999/whats-the-difference-between-docker-stop-and-docker-kill" target="_blank" rel="noopener">what’s the difference between docker stop and docker kill?</a>, superuse, Steffen Opel<br>[3] <a href="https://stackoverflow.com/questions/22655867/what-is-the-difference-between-save-and-export-in-docker" target="_blank" rel="noopener">What is the difference between save and export in Docker?</a>, Stack Overflow, mbarthelemy<br>[4] <a href="https://tuhrig.de/flatten-a-docker-container-or-image" target="_blank" rel="noopener">Difference between save and export</a>, Thomas<br>[5] <a href="https://stackoverflow.com/questions/36925261/what-is-the-difference-between-import-and-load-in-docker" target="_blank" rel="noopener">What is the difference between import and load in Docker?</a>, Stack Overflow, VonC</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Docker/" rel="tag"># Docker</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/05/23/2018-05-23-Jenkins-with-docker/" rel="next" title="使用Docker部署Jenkins环境">
+                <i class="fa fa-chevron-left"></i> 使用Docker部署Jenkins环境
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/06/01/2018-05-16-Locust-writing-locustfile/" rel="prev" title="Locust - 编写locustfile">
+                Locust - 编写locustfile <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar-me.jpg"
+                alt="严北" />
+            
+              <p class="site-author-name" itemprop="name">严北</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%7C%7Carchive">
+              
+                  <span class="site-state-item-count">28</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">10</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">34</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/ityoung" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://juejin.im/user/5a9ea689f265da23906b89e1" target="_blank" title="掘金">
+                      
+                        <i class="fa fa-fw fa-custom icon-juejin"></i>掘金</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#kill-vs-stop"><span class="nav-number">1.</span> <span class="nav-text">kill vs stop</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#run-vs-start"><span class="nav-number">2.</span> <span class="nav-text">run vs start</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#export-vs-save"><span class="nav-number">3.</span> <span class="nav-text">export vs save</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#import-vs-load"><span class="nav-number">4.</span> <span class="nav-text">import vs load</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#rm-vs-rmi"><span class="nav-number">5.</span> <span class="nav-text">rm vs rmi</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#image-vs-container"><span class="nav-number">6.</span> <span class="nav-text">image vs container</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">7.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">严北</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+          <span id="scrollpercent"><span>0</span>%</span>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

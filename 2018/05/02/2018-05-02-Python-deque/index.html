@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Python,翻译," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="class collections.deque([iterable[, maxlen]])Deque 双端队列介绍初始化时，传入一个可迭代的数据，将返回一个从左到右的新的deque对象(可以理解为使用append()来遍历并添加数据中的元素到队列右端)。如果没有指定一个初始值，则生成一个长度为0的deque。 双端队列（Deque）是堆栈和队列的一般化(读音是“deck”，是“double-end">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Python - deque双端队列">
+<meta property="og:url" content="http://intest.tech/2018/05/02/2018-05-02-Python-deque/index.html">
+<meta property="og:site_name" content="Shin&#39;s Blog">
+<meta property="og:description" content="class collections.deque([iterable[, maxlen]])Deque 双端队列介绍初始化时，传入一个可迭代的数据，将返回一个从左到右的新的deque对象(可以理解为使用append()来遍历并添加数据中的元素到队列右端)。如果没有指定一个初始值，则生成一个长度为0的deque。 双端队列（Deque）是堆栈和队列的一般化(读音是“deck”，是“double-end">
+<meta property="article:published_time" content="2018-05-01T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-03-19T05:22:27.704Z">
+<meta property="article:author" content="严北">
+<meta property="article:tag" content="Python">
+<meta property="article:tag" content="翻译">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://intest.tech/2018/05/02/2018-05-02-Python-deque/"/>
+
+
+
+
+
+  <title>Python - deque双端队列 | Shin's Blog</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Shin's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Aims at Test Architect</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://intest.tech/2018/05/02/2018-05-02-Python-deque/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="严北">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar-me.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Shin's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Python - deque双端队列</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-02T00:00:00+08:00">
+                2018-05-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Python/" itemprop="url" rel="index">
+                    <span itemprop="name">Python</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="class-collections-deque-iterable-maxlen"><a href="#class-collections-deque-iterable-maxlen" class="headerlink" title="class collections.deque([iterable[, maxlen]])"></a>class collections.deque([iterable[, maxlen]])</h2><h3 id="Deque-双端队列介绍"><a href="#Deque-双端队列介绍" class="headerlink" title="Deque 双端队列介绍"></a>Deque 双端队列介绍</h3><p>初始化时，传入一个<strong>可迭代</strong>的数据，将返回一个从左到右的新的deque对象(可以理解为使用<code>append()</code>来遍历并添加数据中的元素到队列右端)。如果没有指定一个初始值，则生成一个长度为0的deque。</p>
+<p>双端队列（Deque）是堆栈和队列的一般化(读音是“deck”，是“double-end queue”的缩写)。Deque是<strong>线程安全且高效</strong>的，从队列两端添加（append）或弹出（pop）元素的复杂度大约仅<strong>O(1)</strong>。</p>
+<p>虽然<code>list</code>对象支持类似的操作，但是list的只是对固定长度的列表做优化，在执行改变数据元素位置和列表长度的操作（如<code>pop(0)</code>弹出第一个元素，<code>insert(0,v)</code>在某个位置插入元素）时，复杂度达到<strong>O(n)</strong>。</p>
+<p>如果<code>maxlen</code>没有指定或为<code>None</code>，那么deque可以增长到任意长度。否则，deque最大长度将限制为<code>maxlen</code>。一旦一个有界长度的deque被填满，添加新元素时，相应数目的元素就会从相反的一端被丢弃。有界双端队列提供了类似于<code>Unix</code>中的<code>tail</code>过滤器的功能。它们对于跟踪事务和一些数据池也很有用，因为只有最近的活动才是程序关心的。</p>
+<a id="more"></a>
+
+<h3 id="Deque-对象支持以下方法："><a href="#Deque-对象支持以下方法：" class="headerlink" title="Deque 对象支持以下方法："></a>Deque 对象支持以下方法：</h3><ul>
+<li><p>append(x)<br>将元素 x 添加到队列右端</p>
+</li>
+<li><p>appendleft(x)<br>将元素 x 添加到队列左端</p>
+</li>
+<li><p>clear()<br>清空队列，并将队列长度置0</p>
+</li>
+<li><p>copy()<br>浅复制该队列</p>
+<blockquote>
+<p>Python 3.5 的新特性</p>
+</blockquote>
+</li>
+<li><p>count(x)<br>计算队列中，值等于 x 的个数</p>
+<blockquote>
+<p>Python 3.2 的新特性</p>
+</blockquote>
+</li>
+<li><p>extend(iterable)<br>往队列右端添加可迭代的元素</p>
+</li>
+<li><p>extendleft(iterable)<br>往队列右端添加可迭代的元素。需要注意的是，可迭代的元素集将会以倒序形式体现在最终的队列中：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt;&gt; import collections</span><br><span class="line">&gt;&gt;&gt; d &#x3D; collections.deque()  </span><br><span class="line">&gt;&gt;&gt; d.extendleft(range(6))  </span><br><span class="line">&gt;&gt;&gt; d</span><br><span class="line">deque([5, 4, 3, 2, 1, 0])</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>index(x[, start[, stop]])<br>返回元素 x 在队列中的坐标。如果有 start 和 stop 参数，则在以 start 和 stop 为起止索引的子队列中查找该元素 x ，若存在返回元素 x 在完整队列中的坐标。如果元素不在目标队列中，则触发 <code>ValueError</code> 错误</p>
+<blockquote>
+<p>Python 3.5 的新特性</p>
+</blockquote>
+</li>
+<li><p>insert(i, x)<br>将元素 x 插入到队列的 i 位置。<br>若插入的位置超过<strong>有界双端队列</strong>长度，则会触发 <code>IndexError</code></p>
+<blockquote>
+<p>Python 3.5 的新特性</p>
+</blockquote>
+</li>
+<li><p>pop()<br>弹出（移除并返回）队列最右端的元素。若队列为空，则触发<code>IndexError</code>错误</p>
+</li>
+<li><p>popleft()<br>弹出（移除并返回）队列最左端的元素。若队列为空，则触发<code>IndexError</code>错误</p>
+</li>
+<li><p>remove(value)<br>移除队列中第一个出现的值为 value 的元素。若不存在这样的元素，则触发<code>ValueError</code>错误</p>
+</li>
+<li><p>reverse()<br>反转队列中的元素，并返回<code>None</code></p>
+<blockquote>
+<p>Python 3.2 的新特性</p>
+</blockquote>
+</li>
+<li><p>rotate(n=1)<br>将deque视为首尾相连的队列，若 n 为正整数，向右移 n 位。n 默认为 1，即当不指定 n 值时，默认右移 1 位。n 可以取负值，表示向左移 n 位：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"> &gt;&gt;&gt; from collections import deque</span><br><span class="line"> &gt;&gt;&gt; d &#x3D; deque(range(6))</span><br><span class="line"> &gt;&gt;&gt; d</span><br><span class="line"> deque([0, 1, 2, 3, 4, 5])</span><br><span class="line"> &gt;&gt;&gt; d.rotate()    # 向右移1位</span><br><span class="line"> &gt;&gt;&gt; d</span><br><span class="line"> deque([5, 0, 1, 2, 3, 4])</span><br><span class="line"> &gt;&gt;&gt; d.rotate(-3)    # 向左移3位</span><br><span class="line"> &gt;&gt;&gt; d</span><br><span class="line"> deque([2, 3, 4, 5, 0, 1])</span><br><span class="line"> &#96;&#96;&#96; </span><br><span class="line">当队列不为空时，右移一位相当于&#96;d.appendleft(d.pop())&#96;，而左移一位相当于&#96;d.append(d.popleft())&#96;</span><br><span class="line"></span><br><span class="line">Deque对象还提供了一个只读属性：</span><br><span class="line">- maxlen</span><br><span class="line">如果队列有界，返回队列最大长度，否则返回None</span><br><span class="line">&gt;Python 3.1 的新特性</span><br><span class="line"></span><br><span class="line">除了上述的用法，deque同样支持迭代、持久化，能够用 &#96;len(d)&#96;, &#96;reversed(d)&#96;, &#96;copy.copy(d)&#96;, &#96;copy.deepcopy(d)&#96;等方法，也能用 &#96;in&#96; 运算符操作deque对象中的元素，以及下标索引例如&#96;d[-1]&#96;。对两端的索引操作复杂度是**O(1)**，但是当操作中间元素时，复杂度会上升到**O(n)**。想要快速随机访问队列中的元素，用&#96;list&#96;更合适。</span><br><span class="line"></span><br><span class="line">从 Python 3.5 开始，deque 支持 &#96;__add__()&#96; (两个deque相加)、&#96;__mul__()&#96; (deque * n 倍)和 &#96;__imul__()&#96; (deque * n 倍后赋值给自身)。</span><br><span class="line"></span><br><span class="line">### 方法示例：</span><br></pre></td></tr></table></figure>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>from collections import deque<br>d = deque(‘ghi’) # make a new deque with three items<br>for elem in d: # iterate over the deque’s elements<br>… print(elem.upper())<br>G<br>H<br>I<br>d.append(‘j’) # add a new entry to the right side<br>d.appendleft(‘f’) # add a new entry to the left side<br>d # show the representation of the deque<br>deque([‘f’, ‘g’, ‘h’, ‘i’, ‘j’])<br>d.pop() # return and remove the rightmost item<br>‘j’<br>d.popleft() # return and remove the leftmost item<br>‘f’<br>list(d) # list the contents of the deque<br>[‘g’, ‘h’, ‘i’]<br>d[0] # peek at leftmost item<br>‘g’<br>d[-1] # peek at rightmost item<br>‘i’<br>list(reversed(d)) # list the contents of a deque in reverse<br>[‘i’, ‘h’, ‘g’]<br>‘h’ in d # search the deque<br>True<br>d.extend(‘jkl’) # add multiple elements at once<br>d<br>deque([‘g’, ‘h’, ‘i’, ‘j’, ‘k’, ‘l’])<br>d.rotate(1) # right rotation<br>d<br>deque([‘l’, ‘g’, ‘h’, ‘i’, ‘j’, ‘k’])<br>d.rotate(-1) # left rotation<br>d<br>deque([‘g’, ‘h’, ‘i’, ‘j’, ‘k’, ‘l’])<br>deque(reversed(d)) # make a new deque in reverse order<br>deque([‘l’, ‘k’, ‘j’, ‘i’, ‘h’, ‘g’])<br>d.clear() # empty the deque<br>d.pop() # cannot pop from an empty deque<br>Traceback (most recent call last):<br>  File “&lt;pyshell#6&gt;”, line 1, in -toplevel-</p>
+<pre><code>d.pop()</code></pre><p>IndexError: pop from an empty deque<br>d.extendleft(‘abc’) # extendleft() reverses the input order<br>d<br>deque([‘c’, ‘b’, ‘a’])</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">### 应用场景</span><br><span class="line"></span><br><span class="line">本节介绍几种deque的具体应用。</span><br><span class="line"></span><br><span class="line">有界双端队列提供了一个类似Unix系统下的&#96;tail&#96;命令功能：</span><br></pre></td></tr></table></figure>
+<p>def tail(filename, n=10):<br>  ‘Return the last n lines of a file’<br>  with open(filename) as f:</p>
+<pre><code>return deque(f, n)</code></pre><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">deque的另一种使用场景可以是右进左出，用于操作最近添加的几个元素。下面是一个计算相邻几个元素平均值的函数：</span><br></pre></td></tr></table></figure>
+<p>def moving_average(iterable, n=3):</p>
+<h1 id="moving-average-40-30-50-46-39-44-–-gt-40-0-42-0-45-0-43-0"><a href="#moving-average-40-30-50-46-39-44-–-gt-40-0-42-0-45-0-43-0" class="headerlink" title="moving_average([40, 30, 50, 46, 39, 44]) –&gt; 40.0 42.0 45.0 43.0"></a>moving_average([40, 30, 50, 46, 39, 44]) –&gt; 40.0 42.0 45.0 43.0</h1><h1 id="http-en-wikipedia-org-wiki-Moving-average"><a href="#http-en-wikipedia-org-wiki-Moving-average" class="headerlink" title="http://en.wikipedia.org/wiki/Moving_average"></a><a href="http://en.wikipedia.org/wiki/Moving_average" target="_blank" rel="noopener">http://en.wikipedia.org/wiki/Moving_average</a></h1><p>  it = iter(iterable)<br>  d = deque(itertools.islice(it, n-1))<br>  d.appendleft(0)<br>  s = sum(d)<br>  for elem in it:</p>
+<pre><code>s += elem - d.popleft()
+d.append(elem)
+yield s / n</code></pre><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">deque的&#96;rotate()&#96;方法提供了一种切片和删除的方法。举个例子，使用纯Python实现&#96;del d[n]&#96;功能（将某个位置的元素弹出）依赖于&#96;rotate()&#96;方法：</span><br></pre></td></tr></table></figure>
+<p>def delete_nth(d, n):<br>  d.rotate(-n)<br>  d.popleft()<br>  d.rotate(n)</p>
+<pre><code></code></pre></li>
+</ul>
+<p>将需要删除的第 n 位元素用<code>rotate()</code>移至队列最左端，然后用<code>popleft()</code>弹出最左端的这个元素，再将剩下的元素移位回去。</p>
+<p>再对这个方法进行一些小改动，还可以很容易地实现<code>Forth</code>语言中对堆栈的操作方法，例如<code>dup</code>, <code>drop</code>, <code>swap</code>, <code>over</code>, <code>pick</code>, <code>rot</code>, 和 <code>roll</code>。</p>
+<h2 id="翻译自"><a href="#翻译自" class="headerlink" title="翻译自"></a>翻译自</h2><p>[1] <a href="https://docs.python.org/3/library/collections.html#deque-objects" target="_blank" rel="noopener">collections.deque</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Python/" rel="tag"># Python</a>
+          
+            <a href="/tags/%E7%BF%BB%E8%AF%91/" rel="tag"># 翻译</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/03/16/2018-03-16-Tornado-unittest-sample/" rel="next" title="Tornado - 一个简单的单元测试实例">
+                <i class="fa fa-chevron-left"></i> Tornado - 一个简单的单元测试实例
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/05/03/2018-05-03-Locust-introduction/" rel="prev" title="Locust简单使用 - Python性能测试工具">
+                Locust简单使用 - Python性能测试工具 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar-me.jpg"
+                alt="严北" />
+            
+              <p class="site-author-name" itemprop="name">严北</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%7C%7Carchive">
+              
+                  <span class="site-state-item-count">28</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">10</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">34</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/ityoung" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://juejin.im/user/5a9ea689f265da23906b89e1" target="_blank" title="掘金">
+                      
+                        <i class="fa fa-fw fa-custom icon-juejin"></i>掘金</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#class-collections-deque-iterable-maxlen"><span class="nav-number">1.</span> <span class="nav-text">class collections.deque([iterable[, maxlen]])</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Deque-双端队列介绍"><span class="nav-number">1.1.</span> <span class="nav-text">Deque 双端队列介绍</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Deque-对象支持以下方法："><span class="nav-number">1.2.</span> <span class="nav-text">Deque 对象支持以下方法：</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#moving-average-40-30-50-46-39-44-–-gt-40-0-42-0-45-0-43-0"><span class="nav-number"></span> <span class="nav-text">moving_average([40, 30, 50, 46, 39, 44]) –&gt; 40.0 42.0 45.0 43.0</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#http-en-wikipedia-org-wiki-Moving-average"><span class="nav-number"></span> <span class="nav-text">http:&#x2F;&#x2F;en.wikipedia.org&#x2F;wiki&#x2F;Moving_average</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#翻译自"><span class="nav-number">1.</span> <span class="nav-text">翻译自</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">严北</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+          <span id="scrollpercent"><span>0</span>%</span>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

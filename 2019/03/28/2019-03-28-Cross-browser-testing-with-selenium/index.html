@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="自动化测试,Selenium,UI自动化测试," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="概述浏览器兼容性是目前前端项目迭代中常常遇到的问题. 每次迭代, 回归测试需要消耗大量人力进行手动操作, 去覆盖不同浏览器下不同业务场景的前端展示情况. 本文的目的即探讨解决这类问题的一个方案: 利用分布式的UI自动化测试框架Selenium Grid解决跨浏览器的兼容性问题. 技术方案 Python + Selenium3, 用于驱动不同的浏览器执行验证操作 Selenium Grid, 用于实">
+<meta property="og:type" content="article">
+<meta property="og:title" content="浏览器兼容性测试设计与原理剖析">
+<meta property="og:url" content="http://intest.tech/2019/03/28/2019-03-28-Cross-browser-testing-with-selenium/index.html">
+<meta property="og:site_name" content="Shin&#39;s Blog">
+<meta property="og:description" content="概述浏览器兼容性是目前前端项目迭代中常常遇到的问题. 每次迭代, 回归测试需要消耗大量人力进行手动操作, 去覆盖不同浏览器下不同业务场景的前端展示情况. 本文的目的即探讨解决这类问题的一个方案: 利用分布式的UI自动化测试框架Selenium Grid解决跨浏览器的兼容性问题. 技术方案 Python + Selenium3, 用于驱动不同的浏览器执行验证操作 Selenium Grid, 用于实">
+<meta property="og:image" content="http://intest.tech/img/in-post/article-cross-browser-testing-with-selenium/Selenium.png">
+<meta property="og:image" content="http://intest.tech/img/in-post/article-cross-browser-testing-with-selenium/Selenium.png">
+<meta property="article:published_time" content="2019-03-27T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-03-19T05:22:27.709Z">
+<meta property="article:author" content="严北">
+<meta property="article:tag" content="自动化测试">
+<meta property="article:tag" content="Selenium">
+<meta property="article:tag" content="UI自动化测试">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://intest.tech/img/in-post/article-cross-browser-testing-with-selenium/Selenium.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://intest.tech/2019/03/28/2019-03-28-Cross-browser-testing-with-selenium/"/>
+
+
+
+
+
+  <title>浏览器兼容性测试设计与原理剖析 | Shin's Blog</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Shin's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Aims at Test Architect</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://intest.tech/2019/03/28/2019-03-28-Cross-browser-testing-with-selenium/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="严北">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar-me.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Shin's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">浏览器兼容性测试设计与原理剖析</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-03-28T00:00:00+08:00">
+                2019-03-28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" itemprop="url" rel="index">
+                    <span itemprop="name">自动化测试</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>浏览器兼容性是目前前端项目迭代中常常遇到的问题.</p>
+<p>每次迭代, 回归测试需要消耗大量人力进行手动操作, 去覆盖不同浏览器下不同业务场景的前端展示情况.</p>
+<p>本文的目的即探讨解决这类问题的一个方案: 利用分布式的UI自动化测试框架Selenium Grid解决跨浏览器的兼容性问题.</p>
+<h2 id="技术方案"><a href="#技术方案" class="headerlink" title="技术方案"></a>技术方案</h2><ul>
+<li>Python + Selenium3, 用于驱动不同的浏览器执行验证操作</li>
+<li>Selenium Grid, 用于实现分布式执行用例</li>
+<li>VMware, 安装不同种类浏览器, 作为执行节点</li>
+</ul>
+<a id="more"></a>
+
+<h3 id="Selenium原理"><a href="#Selenium原理" class="headerlink" title="Selenium原理"></a>Selenium原理</h3><p>通过Selenium控制浏览器模拟人工操作的过程如下:</p>
+<p><img src="/img/in-post/article-cross-browser-testing-with-selenium/Selenium.png" alt="Selenium工作原理"></p>
+<center>
+<small>图1.1-Selenium原理</small>
+</center>
+
+<p>WebDriver充当一个HTTP Server的角色, 它接收Selenium客户端发来的请求, 同时根据不同的请求内容对浏览器进行不同的操作.</p>
+<p>Selenium封装了WebDriver所能接收的各类请求路由(URL)和内容(Body)，Python代码在调用Selenium库时其实是在操作Selenium库发送这些HTTP请求。</p>
+<p>在代码执行之初，我们需要初始化一个webdriver对象，初始化的过程中，实际上是Selenium库启动了一个子进程，将WebDriver程序运行在后台中，监听接下来Selenium客户端发来的请求。</p>
+<p>Selenium客户端，WebDriver与浏览器之间通过初始化浏览器时生成的SessionID进行浏览器对象绑定，使得Python代码能够准确的控制某一浏览器窗口。</p>
+<h3 id="Selenium-Grid原理"><a href="#Selenium-Grid原理" class="headerlink" title="Selenium Grid原理"></a>Selenium Grid原理</h3><p>Selenium Grid 允许我们在不同机器/浏览器上, 同时执行测试用例.</p>
+<p>一个Selenium Grid结构中包括一个主节点(hub)和多个从节点(node). 主从节点都是通过运行<code>selenium-server-standalone.jar</code>启动.</p>
+<p>Selenium 客户端(如本项目)运行在hub上, 通过Selenium Grid将操作浏览器的指令分发到各个node中, 即实现了分布式执行测试用例.</p>
+<p>主从结构的优势在于, 无需在所有从节点上配置执行环境(如Python和Selenium库), 即可直接执行主节点发来的执行指令.</p>
+<p><img src="/img/in-post/article-cross-browser-testing-with-selenium/Selenium.png" alt="Selenium Grid架构图"></p>
+<center>
+<small>图2.1-测试环境架构图</small>
+</center>
+
+<h2 id="技术实现"><a href="#技术实现" class="headerlink" title="技术实现"></a>技术实现</h2><h3 id="自动化测试代码"><a href="#自动化测试代码" class="headerlink" title="自动化测试代码"></a>自动化测试代码</h3><p>我们可以使用各种语言编写Selenium客户端执行程序，因为从Selenium原理上可知，WebDriver本身是一个HTTP Server，只要程序语言支持发送HTTP请求都能实现自动化测试的过程。本文将使用Python编码。</p>
+<h4 id="自动化执行过程"><a href="#自动化执行过程" class="headerlink" title="自动化执行过程"></a>自动化执行过程</h4><h5 id="引用Selenium库"><a href="#引用Selenium库" class="headerlink" title="引用Selenium库"></a>引用Selenium库</h5><p>Selenium的Python库已由官方实现，直接安装然后调用即可。</p>
+<p>安装：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install selenium==3.141.0</span><br></pre></td></tr></table></figure>
+
+<p>引入：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> selenium <span class="keyword">import</span> webdriver</span><br></pre></td></tr></table></figure>
+
+<h5 id="初始化webdriver"><a href="#初始化webdriver" class="headerlink" title="初始化webdriver"></a>初始化webdriver</h5><p>以Chrome浏览器为例：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">driver = webdriver.Chrome()</span><br></pre></td></tr></table></figure>
+
+<p>我们可以打开<code>Chrome()</code>这个类查看<code>__init__</code>方法，可以看到主要过程就是设置<code>capabilities</code>参数用来指定需要操作的对象是Chrome，然后在后台启动了一个子进程(<code>selenium/webdriver/common/service.py</code>中<code>Service</code>类的<code>start</code>方法)，这个过程与在终端中启动<code>chromedriver</code>的效果类似，都是启动了一个HTTP server，用于接收接下来的Selenium客户端的请求。</p>
+<h5 id="打开浏览器"><a href="#打开浏览器" class="headerlink" title="打开浏览器"></a>打开浏览器</h5><p>从这步开始，代码其实是在不断的给WebDriver这个server发送HTTP请求了。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">driver.get(url)</span><br></pre></td></tr></table></figure>
+
+<p>执行成功，将会打开一个浏览器页面。</p>
+<h5 id="查找元素"><a href="#查找元素" class="headerlink" title="查找元素"></a>查找元素</h5><p>查找元素的方法有很多，这里以CSS为例，查找一个按钮的元素ID：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">element = driver.find_element_by_css_selector(submit_btn)</span><br></pre></td></tr></table></figure>
+
+<p>查找到元素后，WebDriver会返回元素的ID等信息，Selenium客户端会创建一个<code>WebElement</code>对象存储这个元素信息。</p>
+<h5 id="执行点击操作"><a href="#执行点击操作" class="headerlink" title="执行点击操作"></a>执行点击操作</h5><p><code>WebElement</code>类中包含封装好的click，submit等多种操作，许多操作过程实际是以JavaScript代码执行。</p>
+<p>有了这些封装好的方法，执行点击某元素的操作就很简单了：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">element.click()</span><br></pre></td></tr></table></figure>
+
+<h4 id="测试结果判断"><a href="#测试结果判断" class="headerlink" title="测试结果判断"></a>测试结果判断</h4><p>有了自动化执行的过程，作为自动化测试，少不了测试的过程。</p>
+<h5 id="测试框架"><a href="#测试框架" class="headerlink" title="测试框架"></a>测试框架</h5><p>测试框架可以使用Python自带的<code>unittest</code>即可，在<code>setUp</code>方法中初始化浏览器对象，在每个测试用例中使用封装好的断言方法对操作的响应进行比较并返回结果。</p>
+<h5 id="更多可能性"><a href="#更多可能性" class="headerlink" title="更多可能性"></a>更多可能性</h5><p>在机器学习应用日趋广泛的情况下，提取预期结果的特征，训练出符合自己业务的机器学习模型，将每次执行操作的结果截图作为模型输入，可能能够解决UI自动化测试需要主观判断测试结果的难题。</p>
+<h3 id="Selenium-Grid分布式执行用例"><a href="#Selenium-Grid分布式执行用例" class="headerlink" title="Selenium Grid分布式执行用例"></a>Selenium Grid分布式执行用例</h3><h4 id="环境准备"><a href="#环境准备" class="headerlink" title="环境准备"></a>环境准备</h4><p>对于hub, 需要安装:</p>
+<ul>
+<li>JDK8环境, 用于提供selenium-server-standalone.jar包的运行环境</li>
+<li>selenium-server-standalone.jar, 用于建立与node的连接</li>
+<li>Python3环境, 用于执行UI测试代码</li>
+</ul>
+<p>对于node, 需要安装:</p>
+<ul>
+<li>JDK8环境, 用于提供selenium-server-standalone.jar包的运行环境</li>
+<li>selenium-server-standalone.jar, 用于建立与hub的连接</li>
+<li>WebDriver, 用于控制浏览器执行操作指令</li>
+</ul>
+<h5 id="主节点"><a href="#主节点" class="headerlink" title="主节点"></a>主节点</h5><ol>
+<li>以hub角色启动Selenium-server:</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -jar selenium-server-standalone-3.141.59.jar -role hub</span><br></pre></td></tr></table></figure>
+
+<p>待node节点连接成功后, 在hub节点上执行本项目代码, 即可看到node节点上的浏览器启动并执行相应操作.</p>
+<h5 id="从节点"><a href="#从节点" class="headerlink" title="从节点"></a>从节点</h5><ol>
+<li>以node角色启动Selenium-server:</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">java -jar selenium-server-standalone-3.141.59.jar -role node </span><br><span class="line">  -hub http://&lt;IP&gt;:4444/grid/register \</span><br><span class="line">  -browser "browswerName=&lt;BrowserName&gt;,\</span><br><span class="line">    version=&lt;Version&gt;,\</span><br><span class="line">    platform=&lt;PLATFORM&gt;"</span><br></pre></td></tr></table></figure>
+
+<p>参数说明:</p>
+<ul>
+<li><IP>: hub节点的IP, 注意hub节点与node节点需要互通, 若是虚拟机, 需要将网络配置为桥接(Bridge)模式</li>
+<li><BrowserName>: 浏览器名, 如: internet explorer, chrome, firefox等</li>
+<li><Version>: 浏览器版本号: 以IE9为例, version=9</li>
+<li><PLATFORM>: 系统类型, 如: WINDOWS, LINUX等</li>
+</ul>
+<p>在连接成功后可以看到控制台中的一段信息:</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Capabilities are: &#123;</span><br><span class="line">    "browswerName": "internet explorer",</span><br><span class="line">    "platform": "WINDOWS",</span><br><span class="line">    "version":""</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这段浏览器配置信息是用于Selenium客户端连接所用:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">browser = webdriver.Remote(</span><br><span class="line">    command_executor = <span class="string">'http://localhost:4444/wd/hub'</span>,</span><br><span class="line">    desired_capabilities=&#123;</span><br><span class="line">        <span class="string">"browswerName"</span>: <span class="string">"internet explorer"</span>,</span><br><span class="line">        <span class="string">"platform"</span>: <span class="string">"WINDOWS"</span>,</span><br><span class="line">        <span class="string">"version"</span>:<span class="string">""</span></span><br><span class="line">    &#125;</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<h4 id="执行过程"><a href="#执行过程" class="headerlink" title="执行过程"></a>执行过程</h4><h5 id="修改WebDriver入口"><a href="#修改WebDriver入口" class="headerlink" title="修改WebDriver入口"></a>修改WebDriver入口</h5><p>由于所有的浏览器入口都统一成Hub节点的server，因此需要将WebDriver初始化入口代码修改。以IE为例：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">driver = webdriver.Remote(</span><br><span class="line">    command_executor = <span class="string">'http://localhost:4444/wd/hub'</span>,</span><br><span class="line">    desired_capabilities=DesiredCapabilities.INTERNETEXPLORER</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<h5 id="运行"><a href="#运行" class="headerlink" title="运行"></a>运行</h5><p>除了WebDriver入口的修改，其他代码可以基本保持不动。<br>和单机的Selenium环境一样，在Hub节点上直接运行测试代码即可，运行后，Node中可用的某个IE浏览器将被启动并执行接下来的操作。</p>
+<h2 id="参考文档"><a href="#参考文档" class="headerlink" title="参考文档"></a>参考文档</h2><ol>
+<li><a href="https://github.com/SeleniumHQ/selenium/wiki/JsonWireProtocol" target="_blank" rel="noopener">Wire Protocol</a>, Selenium, Github Wiki</li>
+<li><a href="https://www.seleniumhq.org/docs/07_selenium_grid.jsp" target="_blank" rel="noopener">Selenium Grid</a>, Selenium, Github Wiki</li>
+<li><a href="https://selenium-python.readthedocs.io/" target="_blank" rel="noopener">Selenium with Python</a>, Selenium, Readthedocs</li>
+<li><a href="https://github.com/SeleniumHQ/selenium/wiki/InternetExplorerDriver" target="_blank" rel="noopener">InternetExplorerDriver</a>, Selenium, Github Wiki</li>
+</ol>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" rel="tag"># 自动化测试</a>
+          
+            <a href="/tags/Selenium/" rel="tag"># Selenium</a>
+          
+            <a href="/tags/UI%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" rel="tag"># UI自动化测试</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/08/12/2018-08-12-Python-code-coverage/" rel="next" title="Python 测试覆盖率统计">
+                <i class="fa fa-chevron-left"></i> Python 测试覆盖率统计
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/06/08/2019-06-08-Django-primer/" rel="prev" title="Django - 两周从入门到熟练工">
+                Django - 两周从入门到熟练工 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar-me.jpg"
+                alt="严北" />
+            
+              <p class="site-author-name" itemprop="name">严北</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%7C%7Carchive">
+              
+                  <span class="site-state-item-count">28</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">10</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">34</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/ityoung" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://juejin.im/user/5a9ea689f265da23906b89e1" target="_blank" title="掘金">
+                      
+                        <i class="fa fa-fw fa-custom icon-juejin"></i>掘金</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#概述"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#技术方案"><span class="nav-number">2.</span> <span class="nav-text">技术方案</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Selenium原理"><span class="nav-number">2.1.</span> <span class="nav-text">Selenium原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Selenium-Grid原理"><span class="nav-number">2.2.</span> <span class="nav-text">Selenium Grid原理</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#技术实现"><span class="nav-number">3.</span> <span class="nav-text">技术实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#自动化测试代码"><span class="nav-number">3.1.</span> <span class="nav-text">自动化测试代码</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#自动化执行过程"><span class="nav-number">3.1.1.</span> <span class="nav-text">自动化执行过程</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#引用Selenium库"><span class="nav-number">3.1.1.1.</span> <span class="nav-text">引用Selenium库</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#初始化webdriver"><span class="nav-number">3.1.1.2.</span> <span class="nav-text">初始化webdriver</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#打开浏览器"><span class="nav-number">3.1.1.3.</span> <span class="nav-text">打开浏览器</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#查找元素"><span class="nav-number">3.1.1.4.</span> <span class="nav-text">查找元素</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#执行点击操作"><span class="nav-number">3.1.1.5.</span> <span class="nav-text">执行点击操作</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#测试结果判断"><span class="nav-number">3.1.2.</span> <span class="nav-text">测试结果判断</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#测试框架"><span class="nav-number">3.1.2.1.</span> <span class="nav-text">测试框架</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#更多可能性"><span class="nav-number">3.1.2.2.</span> <span class="nav-text">更多可能性</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Selenium-Grid分布式执行用例"><span class="nav-number">3.2.</span> <span class="nav-text">Selenium Grid分布式执行用例</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#环境准备"><span class="nav-number">3.2.1.</span> <span class="nav-text">环境准备</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#主节点"><span class="nav-number">3.2.1.1.</span> <span class="nav-text">主节点</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#从节点"><span class="nav-number">3.2.1.2.</span> <span class="nav-text">从节点</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#执行过程"><span class="nav-number">3.2.2.</span> <span class="nav-text">执行过程</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#修改WebDriver入口"><span class="nav-number">3.2.2.1.</span> <span class="nav-text">修改WebDriver入口</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#运行"><span class="nav-number">3.2.2.2.</span> <span class="nav-text">运行</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文档"><span class="nav-number">4.</span> <span class="nav-text">参考文档</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">严北</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+          <span id="scrollpercent"><span>0</span>%</span>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

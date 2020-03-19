@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Python,Locust,性能测试,翻译," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="本文是目前最完整的locustfile编写指南中文版！关注微信公众号: devintest 加入微信群，共同学习进步  locustfile就是一份Python代码文件. locustfile的唯一要求是至少要包含一个Locust类（或其派生类）, 例如测试HTTP请求时, 至少要包含一个HttpLocust类. Locust 类一个Locust类代表一类模拟用户。 一个Locust类 必须 定">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Locust - 编写locustfile">
+<meta property="og:url" content="http://intest.tech/2018/06/01/2018-05-16-Locust-writing-locustfile/index.html">
+<meta property="og:site_name" content="Shin&#39;s Blog">
+<meta property="og:description" content="本文是目前最完整的locustfile编写指南中文版！关注微信公众号: devintest 加入微信群，共同学习进步  locustfile就是一份Python代码文件. locustfile的唯一要求是至少要包含一个Locust类（或其派生类）, 例如测试HTTP请求时, 至少要包含一个HttpLocust类. Locust 类一个Locust类代表一类模拟用户。 一个Locust类 必须 定">
+<meta property="article:published_time" content="2018-05-31T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-03-19T05:22:27.705Z">
+<meta property="article:author" content="严北">
+<meta property="article:tag" content="Python">
+<meta property="article:tag" content="Locust">
+<meta property="article:tag" content="性能测试">
+<meta property="article:tag" content="翻译">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://intest.tech/2018/06/01/2018-05-16-Locust-writing-locustfile/"/>
+
+
+
+
+
+  <title>Locust - 编写locustfile | Shin's Blog</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Shin's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Aims at Test Architect</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://intest.tech/2018/06/01/2018-05-16-Locust-writing-locustfile/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="严北">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar-me.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Shin's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Locust - 编写locustfile</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-06-01T00:00:00+08:00">
+                2018-06-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%80%A7%E8%83%BD%E6%B5%8B%E8%AF%95/" itemprop="url" rel="index">
+                    <span itemprop="name">性能测试</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <blockquote>
+<p>本文是目前最完整的locustfile编写指南中文版！<br>关注微信公众号: devintest 加入微信群，共同学习进步</p>
+</blockquote>
+<p>locustfile就是一份Python代码文件. locustfile的唯一要求是至少要包含一个<code>Locust</code>类（或其派生类）, 例如测试HTTP请求时, 至少要包含一个<code>HttpLocust</code>类.</p>
+<h2 id="Locust-类"><a href="#Locust-类" class="headerlink" title="Locust 类"></a>Locust 类</h2><p>一个<code>Locust</code>类代表一类模拟用户。</p>
+<p>一个<code>Locust</code>类 <strong>必须</strong> 定义一个 <code>task_set</code> 属性，用于指向一个<code>TaskSet</code>类。<code>TaskSet</code>类定义了一系列用户行为，具体内容在后面会介绍到。</p>
+<p>另外还有一对常用属性就是 <code>min_wait</code>/<code>max_wait</code>，分别定义虚拟用户执行两个task之间的最小/最大等待时间，默认值1000，所以不声明这两个属性时，每个task之间默认会有1秒等待时间。</p>
+<a id="more"></a>
+
+<p>可以参考下面的例子与注释理解一下Locust类：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> locust <span class="keyword">import</span> Locust, TaskSet, task</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyTaskSet</span><span class="params">(TaskSet)</span>:</span></span><br><span class="line"><span class="meta">    @task</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">my_task</span><span class="params">(self)</span>:</span></span><br><span class="line">        print(<span class="string">"executing my_task"</span>)</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyLocust</span><span class="params">(Locust)</span>:</span></span><br><span class="line">    task_set = MyTaskSet    <span class="comment"># task_set属性指向一个TaskSet类</span></span><br><span class="line">    min_wait = <span class="number">5000</span>         <span class="comment"># 每个task执行间隔最少5秒</span></span><br><span class="line">    max_wait = <span class="number">15000</span>        <span class="comment"># 每个task执行间隔最多15秒</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>更多<code>Locust</code>类中的属性请参考官方文档。</p>
+</blockquote>
+<h2 id="TaskSet-类"><a href="#TaskSet-类" class="headerlink" title="TaskSet 类"></a>TaskSet 类</h2><p><code>TaskSet</code>类，从字面上理解，就是一系列task的集合。task定义了用户某些行为，例如“请求某个页面”，“搜索某个产品”等等。<code>TaskSet</code>类相当于定义了<code>Locust</code>类定义的用户需要执行哪些测试行为。</p>
+<p>当一个压力测试启动，每个<code>Locust</code>类的实例会执行属性<code>task_set</code>指向的<code>TaskSet</code>测试集，然后每个<code>TaskSet</code>类会调用执行一个task，然后在上节提到的<code>min_wait</code>和<code>max_wait</code>之间取一个随机等待时间，然后再执行下一个，如此往复。</p>
+<p>你需要在<code>TaskSet</code>类中编写一些方法用于实现用户行为，声明task方法需要将这些方法使用<code>task</code>装饰器装饰。</p>
+<p><code>task</code>装饰器最简单的用法可以参考上一节中的代码。除了直接装饰，我们还可以添加一个权重值，task之间执行的次数比值会与他们的权重比值相同：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">class MyTestSet(TestSet):</span><br><span class="line">    @task(1)</span><br><span class="line">    def a:</span><br><span class="line">        do_something</span><br><span class="line"></span><br><span class="line">    @task(3)</span><br><span class="line">    def b:</span><br><span class="line">        do_something</span><br></pre></td></tr></table></figure>
+
+<p>上述例子中，task b的权重是a的三倍，因此a执行一次时，b会执行3次。</p>
+<h3 id="setup-teardown"><a href="#setup-teardown" class="headerlink" title="setup/teardown"></a>setup/teardown</h3><p><code>setup</code>和<code>teardown</code>用于初始化/清理一个测试类所需要/所产生的环境.</p>
+<p>它们是怎么被执行,又会被执行多少次呢? 先看locust源码:</p>
+<p><em>locust/core.py, Line: 282</em></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> hasattr(self, <span class="string">"setup"</span>) <span class="keyword">and</span> self._setup_has_run <span class="keyword">is</span> <span class="literal">False</span>:</span><br><span class="line">    self._set_setup_flag()</span><br><span class="line">    self.setup()</span><br><span class="line"><span class="keyword">if</span> hasattr(self, <span class="string">"teardown"</span>) <span class="keyword">and</span> self._teardown_is_set <span class="keyword">is</span> <span class="literal">False</span>:</span><br><span class="line">    self._set_teardown_flag()</span><br><span class="line">    events.quitting += self.teardown</span><br></pre></td></tr></table></figure>
+
+<p>从源码中可以看出, <code>setup</code>和<code>teardown</code>在执行之后会改变标志, 且执行时需要判断标志, 所以<code>setup</code>只会在<code>task</code>执行前执行一次, 而<code>teardown</code>只会在该类中所有<code>task</code>执行完毕后执行一次.</p>
+<blockquote>
+<p><code>Locust</code>类中也有<code>setup</code>和<code>teardown</code>方法，用法与<code>TaskSet</code>类中的基本一致，因此不做赘述。</p>
+</blockquote>
+<h3 id="on-start-on-stop"><a href="#on-start-on-stop" class="headerlink" title="on_start/on_stop"></a>on_start/on_stop</h3><p>一个<code>TaskSet</code>类也可以声明一个<code>on_start</code>或者<code>on_stop</code>方法。<code>on_start</code>方法在locust启动一个虚拟用户执行 <code>TaskSet</code>类时被调用, 相反的，<code>on_stop</code>在<code>TaskSet</code>停止时被调用。</p>
+<h3 id="执行顺序"><a href="#执行顺序" class="headerlink" title="执行顺序"></a>执行顺序</h3><p>由于<code>Locust</code>类和<code>TaskSet</code>类有多种<code>setup</code>/<code>teardown</code>相互依赖，下面是这些类的执行顺序，方便理解：</p>
+<ol>
+<li>Locust setup</li>
+<li>TaskSet setup</li>
+<li>TaskSet on_start</li>
+<li>TaskSet tasks…</li>
+<li>TaskSet on_stop</li>
+<li>TaskSet teardown</li>
+<li>Locust teardown</li>
+</ol>
+<p>总的来说，<code>setup</code>和<code>teardown</code>就是互补的关系，因此执行顺序也是先执行<code>setup</code>/<code>on_start</code>再执行<code>teardown</code>/<code>on_stop</code>。</p>
+<h2 id="HTTP请求的压力测试"><a href="#HTTP请求的压力测试" class="headerlink" title="HTTP请求的压力测试"></a>HTTP请求的压力测试</h2><p>在前面几篇文章中，只介绍了如何创建Locust类、TaskSet类去模拟用户，本文介绍如何对提供HTTP接口的系统进行压力测试。Locust已经有<code>HttpLocust</code>类，每个<code>HttpLocust</code>类的实例都有一个<code>client</code>属性用于构造HTTP请求。</p>
+<h3 id="HttpLocust类"><a href="#HttpLocust类" class="headerlink" title="HttpLocust类"></a>HttpLocust类</h3><p>一个HttpLocust类的实例可以表示一组用于HTTP压力测试的“用户”，该用户的行为由<code>task_set</code>属性定义，这些与父类<code>Locust</code>类都一致。</p>
+<p>HttpLocust类有个额外的<code>client</code>属性，用于建立与保持HTTP请求会话。熟悉Python的朋友一般都知道<code>requests</code>库，HttpLocust类的client正是封装了该库，用法基本一致。</p>
+<p>当你的Locust类继承自HttpLocust，那你指向的TaskSet可以直接使用client属性发起HTTP请求，下面是一个例子，可以用来对<strong>/</strong>和<strong>/about</strong>两个URL进行压力测试：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">from locust import HttpLocust, TaskSet, task</span><br><span class="line"></span><br><span class="line">class MyTaskSet(TaskSet):</span><br><span class="line">    @task(2)</span><br><span class="line">    def index(self):</span><br><span class="line">        self.client.get(&quot;&#x2F;&quot;)</span><br><span class="line"></span><br><span class="line">    @task(1)</span><br><span class="line">    def about(self):</span><br><span class="line">        self.client.get(&quot;&#x2F;about&#x2F;&quot;)</span><br><span class="line"></span><br><span class="line">class MyLocust(HttpLocust):</span><br><span class="line">    task_set &#x3D; MyTaskSet</span><br><span class="line">    min_wait &#x3D; 5000</span><br><span class="line">    max_wait &#x3D; 15000</span><br></pre></td></tr></table></figure>
+
+<p>上面的示例代码中，每个模拟用户在5-15秒的等待间隔会发起一次请求，task的权重显示了对URL <strong>/</strong> 的请求会是 <strong>/about</strong> 的两倍。</p>
+<p>有心的读者会发现，我们可以在TaskSet中直接使用<em>self.client</em>调用HttpSession，而不是<em>self.locust.client</em>。这是因为为了用户方便，<code>TaskSet</code>类中的<em>self.client</em>已经直接指向<em>self.locust.client</em>。</p>
+<h3 id="HTTP-client基本用法"><a href="#HTTP-client基本用法" class="headerlink" title="HTTP client基本用法"></a>HTTP client基本用法</h3><p>在<em>client</em>属性中,每个HttpLocust实例都有一个<code>HttpSession</code>实例。 HttpSession类实际上是<code>requests.Session</code>的一个子类，可用于发出<code>get</code>，<code>post</code>，<code>put</code>，<code>delete</code>，<code>head</code>，<code>patch</code>和<code>options</code>等HTTP请求并报告给Locust的用于统计。 HttpSession实例会在请求之间保存cookie，以便它可以用来登录网站、保持请求会话。 </p>
+<p>下面是一个简单的例子，它向 <em>/about</em> 发出GET请求（假设self是TaskSet或HttpLocust类的实例：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">response &#x3D; self.client.get(&quot;&#x2F;about&quot;)</span><br><span class="line">print(&quot;Response status code:&quot;, response.status_code)</span><br><span class="line">print(&quot;Response content:&quot;, response.text)</span><br></pre></td></tr></table></figure>
+
+<p>下面是POST请求的例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">response &#x3D; self.client.post(&quot;&#x2F;login&quot;, &#123;&quot;username&quot;:&quot;testuser&quot;, &quot;password&quot;:&quot;secret&quot;&#125;)</span><br></pre></td></tr></table></figure>
+
+<h3 id="人为标记成功失败"><a href="#人为标记成功失败" class="headerlink" title="人为标记成功失败"></a>人为标记成功失败</h3><p>默认情况下，Locust将HTTP响应码为OK(2xx)的请求标记为成功，其他的就标记为失败。可能大多数时候这种处理方式就是我们想要的，但是有的时候就是想测试返回404的情况呢？或者server在返回错误时，错误信息在响应的消息体中而不体现在响应码，这些情况的处理就需要手动控制成功/失败。</p>
+<p>使用catch_response参数和with，可以获取response的内容并标记失败：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">with client.get(&quot;&#x2F;&quot;, catch_response&#x3D;True) as response:</span><br><span class="line">    if response.content !&#x3D; b&quot;Success&quot;:</span><br><span class="line">        response.failure(&quot;Got wrong response&quot;)</span><br></pre></td></tr></table></figure>
+
+<p>正如可以将请求OK响码标记为失败一样，用catch_response参数与with语句也可以将请求不为2xx的响应码标记为成功：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">with client.get(&quot;&#x2F;does_not_exist&#x2F;&quot;, catch_response&#x3D;True) as response:</span><br><span class="line">    if response.status_code &#x3D;&#x3D; 404:</span><br><span class="line">        response.success()</span><br></pre></td></tr></table></figure>
+
+<h3 id="设置检查点"><a href="#设置检查点" class="headerlink" title="设置检查点"></a>设置检查点</h3><p>Locust中设置检查点是很简单的，可以直接用assert设置检查点，对response的内容检查，并输出错误信息：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">response &#x3D; self.client.get(&#39;&#x2F;test_assert&#39;)</span><br><span class="line">assert &#39;‘success&#39; in response.content, &quot;Respense error: &quot; + response</span><br></pre></td></tr></table></figure>
+
+<h3 id="动态参数请求分组"><a href="#动态参数请求分组" class="headerlink" title="动态参数请求分组"></a>动态参数请求分组</h3><p>网站的实参(Query String)经常是动态的，比如<em>/blog?id=diff_id</em>，一次查询一个新的id，如果不指定分组，在Locust的测试结果中和会看到默认以”/blog?id=diff_id”的很多分组，而这些请求都是在测试获取某个id的blog，其实可以被分为一组。</p>
+<p>通过给client传入<em>name</em>参数能够实现分组：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"># 这些id不同的请求都会被分组到 &#x2F;blog&#x2F;?id&#x3D;[id] 中</span><br><span class="line">for i in range(10):</span><br><span class="line">    client.get(&quot;&#x2F;blog?id&#x3D;%i&quot; % i, name&#x3D;&quot;&#x2F;blog?id&#x3D;[id]&quot;)</span><br></pre></td></tr></table></figure>
+
+<h2 id="翻译自"><a href="#翻译自" class="headerlink" title="翻译自"></a>翻译自</h2><p><a href="https://docs.locust.io/en/latest/writing-a-locustfile.html" target="_blank" rel="noopener">locust document - writing a locustfile</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Python/" rel="tag"># Python</a>
+          
+            <a href="/tags/Locust/" rel="tag"># Locust</a>
+          
+            <a href="/tags/%E6%80%A7%E8%83%BD%E6%B5%8B%E8%AF%95/" rel="tag"># 性能测试</a>
+          
+            <a href="/tags/%E7%BF%BB%E8%AF%91/" rel="tag"># 翻译</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/05/30/2018-05-30-Docker-similar-commands/" rel="next" title="Docker - 相似的命令">
+                <i class="fa fa-chevron-left"></i> Docker - 相似的命令
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/06/14/2018-06-14-Gitlab-CI-in-action/" rel="prev" title="Python+Gitlab 持续集成完整实践">
+                Python+Gitlab 持续集成完整实践 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar-me.jpg"
+                alt="严北" />
+            
+              <p class="site-author-name" itemprop="name">严北</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%7C%7Carchive">
+              
+                  <span class="site-state-item-count">28</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">10</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">34</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/ityoung" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://juejin.im/user/5a9ea689f265da23906b89e1" target="_blank" title="掘金">
+                      
+                        <i class="fa fa-fw fa-custom icon-juejin"></i>掘金</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Locust-类"><span class="nav-number">1.</span> <span class="nav-text">Locust 类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TaskSet-类"><span class="nav-number">2.</span> <span class="nav-text">TaskSet 类</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#setup-teardown"><span class="nav-number">2.1.</span> <span class="nav-text">setup&#x2F;teardown</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#on-start-on-stop"><span class="nav-number">2.2.</span> <span class="nav-text">on_start&#x2F;on_stop</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#执行顺序"><span class="nav-number">2.3.</span> <span class="nav-text">执行顺序</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HTTP请求的压力测试"><span class="nav-number">3.</span> <span class="nav-text">HTTP请求的压力测试</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#HttpLocust类"><span class="nav-number">3.1.</span> <span class="nav-text">HttpLocust类</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#HTTP-client基本用法"><span class="nav-number">3.2.</span> <span class="nav-text">HTTP client基本用法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#人为标记成功失败"><span class="nav-number">3.3.</span> <span class="nav-text">人为标记成功失败</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#设置检查点"><span class="nav-number">3.4.</span> <span class="nav-text">设置检查点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#动态参数请求分组"><span class="nav-number">3.5.</span> <span class="nav-text">动态参数请求分组</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#翻译自"><span class="nav-number">4.</span> <span class="nav-text">翻译自</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">严北</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+          <span id="scrollpercent"><span>0</span>%</span>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

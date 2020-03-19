@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="持续集成,Python,Docker,静态代码分析,Sonar,Gitlab-CI," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="借着公司代码库迁移到私有Gitlab的契机，我接下持续集成的工作，实现了对Python服务端代码的单元测试、静态代码分析和接口测试的持续集成。总体架构如下：  执行过程：  开发提交代码后，自动触发gitlab-runner拉取executor镜像执行单元测试，单元测试代码中包含上传测试结果到x-utest测试平台；  单元测试通过后，gitlab-runner拉取sonar-scanner镜像执">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Python+Gitlab 持续集成完整实践">
+<meta property="og:url" content="http://intest.tech/2018/06/14/2018-06-14-Gitlab-CI-in-action/index.html">
+<meta property="og:site_name" content="Shin&#39;s Blog">
+<meta property="og:description" content="借着公司代码库迁移到私有Gitlab的契机，我接下持续集成的工作，实现了对Python服务端代码的单元测试、静态代码分析和接口测试的持续集成。总体架构如下：  执行过程：  开发提交代码后，自动触发gitlab-runner拉取executor镜像执行单元测试，单元测试代码中包含上传测试结果到x-utest测试平台；  单元测试通过后，gitlab-runner拉取sonar-scanner镜像执">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/3520043-037c6419d9b7834e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/3520043-ef053efa262510a5.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/3520043-a8a8597adc85200b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/3520043-db6f17925c82c844.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="article:published_time" content="2018-06-13T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-03-19T05:22:27.706Z">
+<meta property="article:author" content="严北">
+<meta property="article:tag" content="持续集成">
+<meta property="article:tag" content="Python">
+<meta property="article:tag" content="Docker">
+<meta property="article:tag" content="静态代码分析">
+<meta property="article:tag" content="Sonar">
+<meta property="article:tag" content="Gitlab-CI">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://upload-images.jianshu.io/upload_images/3520043-037c6419d9b7834e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://intest.tech/2018/06/14/2018-06-14-Gitlab-CI-in-action/"/>
+
+
+
+
+
+  <title>Python+Gitlab 持续集成完整实践 | Shin's Blog</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Shin's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Aims at Test Architect</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://intest.tech/2018/06/14/2018-06-14-Gitlab-CI-in-action/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="严北">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar-me.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Shin's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Python+Gitlab 持续集成完整实践</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-06-14T00:00:00+08:00">
+                2018-06-14
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90/" itemprop="url" rel="index">
+                    <span itemprop="name">持续集成</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>借着公司代码库迁移到私有Gitlab的契机，我接下持续集成的工作，实现了对<strong>Python</strong>服务端代码的单元测试、静态代码分析和接口测试的持续集成。总体架构如下：</p>
+<p><img src="https://upload-images.jianshu.io/upload_images/3520043-037c6419d9b7834e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="架构图"></p>
+<p>执行过程：</p>
+<ol>
+<li><p>开发提交代码后，自动触发gitlab-runner拉取executor镜像执行单元测试，单元测试代码中包含上传测试结果到x-utest测试平台；</p>
+</li>
+<li><p>单元测试通过后，gitlab-runner拉取sonar-scanner镜像执行静态代码分析，分析结果评论在commit中或保存于sonarqube；</p>
+</li>
+</ol>
+<a id="more"></a>
+
+<ol start="3">
+<li><p>静态代码分析结束，执行分发操作，将代码分发至灰度测试服务器，并运行；</p>
+</li>
+<li><p>执行接口测试，执行完成后上传测试结果到x-utest测试平台。</p>
+</li>
+</ol>
+<p>四个任务相互依赖，只在前一个任务状态为成功情况下才会执行。</p>
+<blockquote>
+<p>本文主要描述一些技术实现，会适当贴出代码，可能能为相关从业者提供灵感与解决方案，不保证每个细节都深入讲解。</p>
+</blockquote>
+<h2 id="Gitlab-CI-基本配置"><a href="#Gitlab-CI-基本配置" class="headerlink" title="Gitlab CI 基本配置"></a>Gitlab CI 基本配置</h2><p>针对某个需要做CI/CD的项目，需要将代码库的该设置打开，并为其配置 gitlab-runner。</p>
+<h3 id="gitlab-runner"><a href="#gitlab-runner" class="headerlink" title="gitlab runner"></a>gitlab runner</h3><p>gitlab-runner不仅可以运行在物理机，还可以运行在容器中。考虑到gitlab-runner消耗的资源少，使用容器更合适。</p>
+<p>拉取gitlab-runner Docker 镜像：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo docker pull gitlab&#x2F;gitlab-runner</span><br></pre></td></tr></table></figure>
+
+<p>启动容器：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">sudo docker run -d --name gitlab-runner --restart always \</span><br><span class="line">    -v &#x2F;srv&#x2F;gitlab-runner&#x2F;config:&#x2F;etc&#x2F;gitlab-runner \</span><br><span class="line">    -v &#x2F;var&#x2F;run&#x2F;docker.sock:&#x2F;var&#x2F;run&#x2F;docker.sock \</span><br><span class="line">    gitlab&#x2F;gitlab-runner:latest</span><br></pre></td></tr></table></figure>
+
+<p>在容器中执行register操作，将gitlab上的项目注册到gitlab-runner中：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo docker exec -it gitlab-runner gitlab-ci-multi-runner register</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>输入上述命令后会有一系列的配置需要输入，当然也可以设置完后进行更改<br>按照提示输入即可，前两项可以在指定项目设置中CI/CD选项里的Runners settings选项中的Specific Runners里看到，tags是gitlab-ci.yml文件中所要用到的，executor选择docker<br>配置成功后，我们可以在设置中CI/CD选项里的Runners settings选项中的Specific Runners里看到runner信息 </p>
+</blockquote>
+<h3 id="本地executor镜像"><a href="#本地executor镜像" class="headerlink" title="本地executor镜像"></a>本地executor镜像</h3><p>为了部署与测试，需要一个镜像用于执行。当选用<strong>本地镜像</strong>时，会发现如下报错</p>
+<p><img src="https://upload-images.jianshu.io/upload_images/3520043-ef053efa262510a5.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="拉取镜像失败"></p>
+<p>报错的原因在于，gitlab-runner尝试去官方的docker hub仓库拉取镜像。通过修改gitlab-runner中的配置，设置只拉取本地镜像：</p>
+<p>修改 <em>/etc/gitlab-runner/config.toml</em> ，在 <code>[runners.docker]</code> 下，添加：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pull_policy &#x3D; never  # 该配置默认always，即只在线上拉取镜像</span><br></pre></td></tr></table></figure>
+
+<p><strong>如果有需要</strong>添加一些hosts映射，仍然在 <code>[runners.docker]</code> 下，添加：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">extra_hosts &#x3D; [&quot;hostname:ip&quot;]</span><br></pre></td></tr></table></figure>
+
+<p>另外为了加快单元测试执行速度，将服务端代码的依赖提前安装至executor镜像中：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">COPY requirement.txt .</span><br><span class="line">RUN pip install -r requirement.txt</span><br></pre></td></tr></table></figure>
+
+<h2 id="编写-gitlab-ci-yaml"><a href="#编写-gitlab-ci-yaml" class="headerlink" title="编写 .gitlab-ci.yaml"></a>编写 .gitlab-ci.yaml</h2><h3 id="单元测试部分"><a href="#单元测试部分" class="headerlink" title="单元测试部分"></a>单元测试部分</h3><h4 id="用nose执行测试"><a href="#用nose执行测试" class="headerlink" title="用nose执行测试"></a>用nose执行测试</h4><p>对于Python，nosetest工具可以嗅探与执行你写的所有测试用例，并输出结果。在执行测试前，使用nose需要使用pip安装</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install nose</span><br></pre></td></tr></table></figure>
+
+<p>安装完成后，使用 <code>nosetests</code> 执行。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nosetests</span><br></pre></td></tr></table></figure>
+
+<h4 id="自写测试入口"><a href="#自写测试入口" class="headerlink" title="自写测试入口"></a>自写测试入口</h4><p>另一个执行测试的选择，是自写测试入口，不依赖nose。好处是能够将测试结果上传至x-utest。<br>对测试结果做判断，如果全部用例通过（即wasSuccessful为True），则sys.exit(0)，否则sys.exit(1)</p>
+<h4 id="redis与mongo服务化"><a href="#redis与mongo服务化" class="headerlink" title="redis与mongo服务化"></a>redis与mongo服务化</h4><p>对于redis与mongo这种外部服务，有两种解决方式，一是mock对数据库的读写，二是使用服务化的redis与mongo，保证外部环境的一致性。（更推荐第一种方式，此处介绍第二种。）</p>
+<p>由于设置了不从docker hub拉取镜像，因此需要先拉取redis与mongo服务镜像到本地</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">docker pull redis:2.8</span><br><span class="line">docker pull mongo:3.2</span><br></pre></td></tr></table></figure>
+
+<p>在gitlab-ci.yaml中添加services:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">services:</span><br><span class="line">  - redis:2.8</span><br><span class="line">  - mongo:3.2</span><br></pre></td></tr></table></figure>
+
+<p>修改代码的local_config配置文件中的mongo与redis连接URL，指向“mongo”与“redis”</p>
+<h3 id="静态代码分析"><a href="#静态代码分析" class="headerlink" title="静态代码分析"></a>静态代码分析</h3><h4 id="sonarqube搭建"><a href="#sonarqube搭建" class="headerlink" title="sonarqube搭建"></a>sonarqube搭建</h4><p>制做了一个docker-compose项目可以<a href="https://github.com/ityoung/sonarqube-docker" target="_blank" rel="noopener">一键部署SonarQube平台</a> <strong>&lt;==欢迎fork/start</strong>，使用postgres作为后端数据库，并将数据持久化在宿主机本地。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">git clone https:&#x2F;&#x2F;github.com&#x2F;ityoung&#x2F;sonarqube-docker.git</span><br><span class="line">pip install docker-compose</span><br><span class="line">cd sonarqube-docker</span><br><span class="line">docker-compose up</span><br></pre></td></tr></table></figure>
+
+<h4 id="sonar-scanner配置"><a href="#sonar-scanner配置" class="headerlink" title="sonar scanner配置"></a>sonar scanner配置</h4><p>同时我也针对Python开源了<a href="https://github.com/ityoung/sonar-scanner-docker" target="_blank" rel="noopener">sonar-scanner镜像的Dockerfile</a> <strong>&lt;==欢迎fork/start</strong>，该镜像已经安装pylint，方便做Python的静态代码分析。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git clone https:&#x2F;&#x2F;github.com&#x2F;ityoung&#x2F;sonar-scanner-docker.git</span><br><span class="line">cd sonar-scanner-docker</span><br><span class="line">docker build -t sonar-scanner .</span><br></pre></td></tr></table></figure>
+
+<h4 id="YAML添加执行命令"><a href="#YAML添加执行命令" class="headerlink" title="YAML添加执行命令"></a>YAML添加执行命令</h4><p>启动SonarQube后，进入IP:9000到SonarQube管理页面，登录admin/admin，新建一个项目，按步骤执行完成</p>
+<p><img src="https://upload-images.jianshu.io/upload_images/3520043-a8a8597adc85200b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="创建一个project"></p>
+<p>创建完成后，获取到执行代码，复制这段代码，添加到yaml中，能够实现分析结果上传到SonarQube。</p>
+<p><img src="https://upload-images.jianshu.io/upload_images/3520043-db6f17925c82c844.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="获取sonar-scanner执行脚本"></p>
+<blockquote>
+<p>注意：如果yaml中用到了两个镜像，尽量不要有before_script，否则可能两个镜像，触发错误。</p>
+</blockquote>
+<h4 id="Sonar分析后评论"><a href="#Sonar分析后评论" class="headerlink" title="Sonar分析后评论"></a>Sonar分析后评论</h4><p>对于develop分支，可以不保存分析结果，而改为将分析结果评论在当次commit下。</p>
+<p>在yaml脚本中添加如下参数：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">    - sonar-scanner</span><br><span class="line">      -Dsonar.analysis.mode&#x3D;preview</span><br><span class="line">      -Dsonar.gitlab.commit_sha&#x3D;$CI_BUILD_REF</span><br><span class="line">      -Dsonar.gitlab.ref_name&#x3D;$CI_BUILD_REF_NAME</span><br><span class="line">      -Dsonar.gitlab.project_id&#x3D;$CI_PROJECT_ID</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>注意：无新issue时默认不会评论，需要在SonarQube修改gitlab配置才会每次都评论。</p>
+</blockquote>
+<h3 id="持续交付"><a href="#持续交付" class="headerlink" title="持续交付"></a>持续交付</h3><p>这部分交由对服务端部署更熟悉的运维操作，因此不做赘述。</p>
+<h3 id="接口测试"><a href="#接口测试" class="headerlink" title="接口测试"></a>接口测试</h3><p>接口测试代码在另一个仓库，这就涉及到从另一个仓库clone测试代码时的权限问题。</p>
+<p>给仓库URL添加token能够实现跨仓库clone代码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git clone https:&#x2F;&#x2F;gitlab-ci-token:$&#123;CI_JOB_TOKEN&#125;@gitlab.xxx.com&#x2F;yx&#x2F;apitest.git</span><br></pre></td></tr></table></figure>
+
+<h2 id="附一：完整的-gitlab-ci-yml"><a href="#附一：完整的-gitlab-ci-yml" class="headerlink" title="附一：完整的.gitlab-ci.yml"></a>附一：完整的.gitlab-ci.yml</h2><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">image:</span> <span class="string">pro1_executor</span></span><br><span class="line"></span><br><span class="line"><span class="attr">stages:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">unittest</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">analyze</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">deploy</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">apitest</span></span><br><span class="line"></span><br><span class="line"><span class="attr">variables:</span></span><br><span class="line">  <span class="attr">SONAR_HOST:</span> <span class="string">"http://192.168.0.29:9000"</span></span><br><span class="line">  <span class="attr">SONAR_PROJ:</span> <span class="string">"pro_1"</span></span><br><span class="line">  <span class="attr">SONAR_LOGIN:</span> <span class="string">"b3135dd602b61ce7ff5f4202a3ec2ec0865fa7f5"</span></span><br><span class="line"></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">redis:3</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">mongo:3.2</span></span><br><span class="line"></span><br><span class="line"><span class="attr">UnitTest:</span></span><br><span class="line">  <span class="attr">stage:</span> <span class="string">unittest</span></span><br><span class="line">  <span class="attr">script:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">pip</span> <span class="string">install</span> <span class="string">nose</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">python</span> <span class="string">-m</span> <span class="string">runtest</span> <span class="string">xtest</span></span><br><span class="line"></span><br><span class="line"><span class="attr">Sonar_Preview:</span></span><br><span class="line">  <span class="attr">image:</span> <span class="string">sonar-scanner</span></span><br><span class="line">  <span class="attr">stage:</span> <span class="string">analyze</span></span><br><span class="line">  <span class="attr">script:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">sonar-scanner</span></span><br><span class="line">      <span class="string">-Dsonar.analysis.mode=preview</span></span><br><span class="line">      <span class="string">-Dsonar.gitlab.commit_sha=$CI_BUILD_REF</span></span><br><span class="line">      <span class="string">-Dsonar.gitlab.ref_name=$CI_BUILD_REF_NAME</span></span><br><span class="line">      <span class="string">-Dsonar.gitlab.project_id=$CI_PROJECT_ID</span></span><br><span class="line">      <span class="string">-Dsonar.projectKey=$SONAR_PROJ</span></span><br><span class="line">      <span class="string">-Dsonar.sources=.</span></span><br><span class="line">      <span class="string">-Dsonar.host.url=$SONAR_HOST</span></span><br><span class="line">      <span class="string">-Dsonar.login=$SONAR_LOGIN</span></span><br><span class="line">  <span class="attr">except:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">master</span></span><br><span class="line"></span><br><span class="line"><span class="attr">Sonar_Analyze:</span></span><br><span class="line">  <span class="attr">image:</span> <span class="string">sonar-scanner</span></span><br><span class="line">  <span class="attr">stage:</span> <span class="string">analyze</span></span><br><span class="line">  <span class="attr">script:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">sonar-scanner</span></span><br><span class="line">      <span class="string">-Dsonar.projectKey=$SONAR_PROJ</span></span><br><span class="line">      <span class="string">-Dsonar.sources=.</span></span><br><span class="line">      <span class="string">-Dsonar.host.url=$SONAR_HOST</span></span><br><span class="line">      <span class="string">-Dsonar.login=$SONAR_LOGIN</span></span><br><span class="line">  <span class="attr">only:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">master</span></span><br><span class="line"></span><br><span class="line"><span class="attr">Deploy_TestServer:</span></span><br><span class="line">  <span class="attr">stage:</span> <span class="string">deploy</span></span><br><span class="line">  <span class="attr">script:</span> <span class="string">echo</span> <span class="string">"deploy"</span></span><br><span class="line"></span><br><span class="line"><span class="attr">API_Test:</span></span><br><span class="line">  <span class="attr">stage:</span> <span class="string">apitest</span></span><br><span class="line">  <span class="attr">script:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">cd</span> <span class="string">/</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">git</span> <span class="string">clone</span> <span class="string">https://gitlab-ci-token:$&#123;CI_JOB_TOKEN&#125;@gitlab.xxx.com/yx/apitest.git</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">cd</span> <span class="string">apitest</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">pip</span> <span class="string">install</span> <span class="string">-r</span> <span class="string">requirements.txt</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">python</span> <span class="string">runtest.py</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>[1] <a href="https://stackoverflow.com/a/50163888/6354733" target="_blank" rel="noopener">how to access multiple repositories in CI build?</a>, Stack Overflow</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90/" rel="tag"># 持续集成</a>
+          
+            <a href="/tags/Python/" rel="tag"># Python</a>
+          
+            <a href="/tags/Docker/" rel="tag"># Docker</a>
+          
+            <a href="/tags/%E9%9D%99%E6%80%81%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90/" rel="tag"># 静态代码分析</a>
+          
+            <a href="/tags/Sonar/" rel="tag"># Sonar</a>
+          
+            <a href="/tags/Gitlab-CI/" rel="tag"># Gitlab-CI</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/06/01/2018-05-16-Locust-writing-locustfile/" rel="next" title="Locust - 编写locustfile">
+                <i class="fa fa-chevron-left"></i> Locust - 编写locustfile
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/06/15/2018-06-15-Head-to-Python-HTTP-testing/" rel="prev" title="Python - 接口自动化测试入门">
+                Python - 接口自动化测试入门 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar-me.jpg"
+                alt="严北" />
+            
+              <p class="site-author-name" itemprop="name">严北</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%7C%7Carchive">
+              
+                  <span class="site-state-item-count">28</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">10</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">34</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/ityoung" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://juejin.im/user/5a9ea689f265da23906b89e1" target="_blank" title="掘金">
+                      
+                        <i class="fa fa-fw fa-custom icon-juejin"></i>掘金</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Gitlab-CI-基本配置"><span class="nav-number">1.</span> <span class="nav-text">Gitlab CI 基本配置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#gitlab-runner"><span class="nav-number">1.1.</span> <span class="nav-text">gitlab runner</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#本地executor镜像"><span class="nav-number">1.2.</span> <span class="nav-text">本地executor镜像</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#编写-gitlab-ci-yaml"><span class="nav-number">2.</span> <span class="nav-text">编写 .gitlab-ci.yaml</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#单元测试部分"><span class="nav-number">2.1.</span> <span class="nav-text">单元测试部分</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#用nose执行测试"><span class="nav-number">2.1.1.</span> <span class="nav-text">用nose执行测试</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#自写测试入口"><span class="nav-number">2.1.2.</span> <span class="nav-text">自写测试入口</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#redis与mongo服务化"><span class="nav-number">2.1.3.</span> <span class="nav-text">redis与mongo服务化</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#静态代码分析"><span class="nav-number">2.2.</span> <span class="nav-text">静态代码分析</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#sonarqube搭建"><span class="nav-number">2.2.1.</span> <span class="nav-text">sonarqube搭建</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#sonar-scanner配置"><span class="nav-number">2.2.2.</span> <span class="nav-text">sonar scanner配置</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#YAML添加执行命令"><span class="nav-number">2.2.3.</span> <span class="nav-text">YAML添加执行命令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Sonar分析后评论"><span class="nav-number">2.2.4.</span> <span class="nav-text">Sonar分析后评论</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#持续交付"><span class="nav-number">2.3.</span> <span class="nav-text">持续交付</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#接口测试"><span class="nav-number">2.4.</span> <span class="nav-text">接口测试</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#附一：完整的-gitlab-ci-yml"><span class="nav-number">3.</span> <span class="nav-text">附一：完整的.gitlab-ci.yml</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">4.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">严北</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+          <span id="scrollpercent"><span>0</span>%</span>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

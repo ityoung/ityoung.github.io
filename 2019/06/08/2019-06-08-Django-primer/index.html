@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Python,Django,后端开发," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="初识 Django之前 Python 后端开发框架中，对 Tornado 和 Flask 接触比较多，前者适合作为服务框架，后者由于轻量常用来构建简单的后台或服务。 Django 之于上面两个 Web 框架，其自身实现了很多工具类库，显得更为笨重，但上手之后，很多功能不需要再自己实现，比较方便。 由于已经集成诸多功能，Djang 也更常被用来作为后台开发框架。 最近新接手一个后台开发任务也是基于">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Django - 两周从入门到熟练工">
+<meta property="og:url" content="http://intest.tech/2019/06/08/2019-06-08-Django-primer/index.html">
+<meta property="og:site_name" content="Shin&#39;s Blog">
+<meta property="og:description" content="初识 Django之前 Python 后端开发框架中，对 Tornado 和 Flask 接触比较多，前者适合作为服务框架，后者由于轻量常用来构建简单的后台或服务。 Django 之于上面两个 Web 框架，其自身实现了很多工具类库，显得更为笨重，但上手之后，很多功能不需要再自己实现，比较方便。 由于已经集成诸多功能，Djang 也更常被用来作为后台开发框架。 最近新接手一个后台开发任务也是基于">
+<meta property="article:published_time" content="2019-06-07T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-03-19T05:22:27.709Z">
+<meta property="article:author" content="严北">
+<meta property="article:tag" content="Python">
+<meta property="article:tag" content="Django">
+<meta property="article:tag" content="后端开发">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://intest.tech/2019/06/08/2019-06-08-Django-primer/"/>
+
+
+
+
+
+  <title>Django - 两周从入门到熟练工 | Shin's Blog</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Shin's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Aims at Test Architect</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://intest.tech/2019/06/08/2019-06-08-Django-primer/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="严北">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar-me.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Shin's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Django - 两周从入门到熟练工</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-06-08T00:00:00+08:00">
+                2019-06-08
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Python/" itemprop="url" rel="index">
+                    <span itemprop="name">Python</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="初识-Django"><a href="#初识-Django" class="headerlink" title="初识 Django"></a>初识 Django</h2><p>之前 Python 后端开发框架中，对 Tornado 和 Flask 接触比较多，前者适合作为服务框架，后者由于轻量常用来构建简单的后台或服务。</p>
+<p>Django 之于上面两个 Web 框架，其自身实现了很多工具类库，显得更为笨重，但上手之后，很多功能不需要再自己实现，比较方便。</p>
+<p>由于已经集成诸多功能，Djang 也更常被用来作为后台开发框架。</p>
+<p>最近新接手一个后台开发任务也是基于 Django 开发，因此本文对最近这两周的所学做个自我总结。</p>
+<a id="more"></a>
+
+<h2 id="Django-几个模块用法"><a href="#Django-几个模块用法" class="headerlink" title="Django 几个模块用法"></a>Django 几个模块用法</h2><p>在具体讲代码之前，我先讲讲整个系统的架构。</p>
+<p>刚接手任务时，数据库使用 MySQL5.5，对应的 Django 版本为 2.0（支持MySQL5.5的最高版本）。</p>
+<p>考虑到系统对接了不同产品线，一些数据格式存在不确定性，我将数据库改为支持 JSON 格式的 MySQL5.7，Django 也对应升级到最新版 2.2。当然，使用其他数据库也是可以的，例如 PostgreSQL 或者 MongoDB，为了不影响原来开发人员的操作习惯，我还是继续使用 MySQL。</p>
+<p>同时考虑到平台存在上传、解析 Excel 文件这种耗时操作，我引入 Celery + RabbitMQ 实现这类操作的异步执行，优化用户体验。</p>
+<p>Django 还有很多功能我暂时未使用到，其本身功能之强大着实减少了我造轮子的代码量，但由于初学，也确实花了很大功夫琢磨每个功能。</p>
+<p>下面讲讲这两周接触到的 Django 的几个模块以及基础用法，更详细的功能请查看官方文档。</p>
+<h3 id="manage-py"><a href="#manage-py" class="headerlink" title="manage.py"></a>manage.py</h3><p>在正式讲功能模块之前，必须得先介绍一下 Django 自带的强大的项目管理工具： <code>django-admin</code> 。</p>
+<p>通常我们创建一个 Django 项目的过程是这样：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 安装 Django</span></span><br><span class="line">pip install django</span><br><span class="line"><span class="comment"># 创建一个 Django 项目</span></span><br><span class="line">django-admin startproject myproject</span><br></pre></td></tr></table></figure>
+
+<p>在创建好 Django 项目后，项目根路径会生成一个 <code>manage.py</code> 文件。该文件实际执行的就是 <code>django-admin</code> 的功能，只不过已经配置好一些系统变量。</p>
+<p>例如在项目内创建一个名为 <code>mysite</code> 的 App ，那么可以：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 创建一个 App</span></span><br><span class="line">python manage.py startapp mysite</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>记住这个 mysite ，这是你的应用名而不仅仅是文件夹名称，后面的开发代码都会准确引用这个名称。</p>
+</blockquote>
+<p>用 <code>manage.py</code> 管理工具，可以方便地实现服务启动、数据库迁移等操作，特别是数据库迁移是我最常用也最爱用的功能，后面会提到。</p>
+<h3 id="Project-与-App"><a href="#Project-与-App" class="headerlink" title="Project 与 App"></a>Project 与 App</h3><p>Django 中，有 <code>Project</code>(项目) 与 <code>App</code>(应用) 的概念，其区别如下：</p>
+<p><code>Project</code> 是整个项目的最高层级，可以在 <code>Project</code> 中对项目所需的依赖、环境等进行配置；</p>
+<p><code>App</code> 依托于项目，一个项目可以有多个应用。</p>
+<p>一般来说，一个独立的管理后台项目<strong>配置一个应用</strong>即可，将不同的用户、项目、任务等功能都同属于一个 <code>App</code>。而如果需要开发一个内部管理后台，集成 2 个不同的系统，这两个系统中各有项目、任务等模块，那么我们就创建 2 个 <code>App</code>，因为这两个应用中的功能互不相关。</p>
+<h3 id="Model"><a href="#Model" class="headerlink" title="Model"></a>Model</h3><p>Django 可用 ORM(对象关系映射) 模式操作数据库，举个例子：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 获取当前用户的用户名</span></span><br><span class="line">operator = request.user</span><br><span class="line"><span class="keyword">return</span> operator.username</span><br></pre></td></tr></table></figure>
+
+<p>简单的两行代码，底层已经由 Django 实现了连接数据库(连接池)、查询用户表、返回 username 字段值等功能。</p>
+<blockquote>
+<p>犹记得我在使用 Tornado 写服务时，需要自己维护一个数据库单例，关心服务启动时数据库实例的初始化顺序等等…</p>
+</blockquote>
+<p>使用 ORM 就需要你对每张表创建一个 <code>Model</code> ，内含你对表字段的定义，例如字段类型、默认值、外键约束等。</p>
+<p>举个例子，一个 <code>Task</code> 表的 Model ：</p>
+<p><em>models.py</em></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Task</span><span class="params">(models.Model)</span>:</span></span><br><span class="line">    status = models.IntegerField(default=<span class="number">0</span>)</span><br><span class="line">    assignee = models.ForeignKey(settings.AUTH_USER_MODEL,</span><br><span class="line">                                 related_name=<span class="string">'+'</span>,</span><br><span class="line">                                 null=<span class="literal">True</span>,</span><br><span class="line">                                 on_delete=models.SET_NULL)</span><br><span class="line">    create_time = models.DateTimeField(auto_now_add=<span class="literal">True</span>)</span><br><span class="line">    update_time = models.DateTimeField(auto_now=<span class="literal">True</span>)</span><br></pre></td></tr></table></figure>
+
+<p>这里也有要注意的地方：如果不特殊配置，Model 类名会被作为数据库表名的一部分，完整为：<APP_NAME>_<MODEL_NAME>，例如本例为 <code>mysite_task</code> 。</p>
+<h3 id="Migration"><a href="#Migration" class="headerlink" title="Migration"></a>Migration</h3><p>创建数据库表的 Model 之后，我们就可以用 Migrations 功能创建表的初始化脚本，以及真正在数据库中建表：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 初始化迁移脚本</span></span><br><span class="line">python manage.py makemigrations [&lt;APP_NAME&gt;]</span><br><span class="line"><span class="comment"># 执行迁移操作，将数据库脚本在对应的数据库中执行一遍</span></span><br><span class="line">python manage.py migrate</span><br></pre></td></tr></table></figure>
+
+<p>Migration的功能强大在于，当你需要更新某个字段（例如将为某字段设置默认值）时，你可以直接修改 Model 中的字段配置即可，然后再次执行 <code>makemigrations</code> ，Django 会为你新建一个数据库脚本记录此次更新，你再执行 <code>migrate</code> 便能将此次更新写入到数据库中。</p>
+<p>不仅如此，我们还可以新建一个空的 migrations 脚本，编写数据插入操作。有这个脚本，我们可以在系统迁移时都保持一部分测试数据：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> django.db <span class="keyword">import</span> migrations</span><br><span class="line"></span><br><span class="line"><span class="comment"># 插入方法</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">insert_task</span><span class="params">(apps, schema_editor)</span>:</span></span><br><span class="line">    Task = apps.get_model(<span class="string">'mysite'</span>, <span class="string">"Task"</span>)</span><br><span class="line">    db_alias = schema_editor.connection.alias</span><br><span class="line">    Task.objects.using(db_alias).bulk_create([</span><br><span class="line">        Task(name=<span class="string">'task1'</span>),</span><br><span class="line">    ])</span><br><span class="line"></span><br><span class="line"><span class="comment"># 回滚方法</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">rollback_task</span><span class="params">(apps, schema_editor)</span>:</span></span><br><span class="line">    Task = apps.get_model(<span class="string">'mysite'</span>, <span class="string">"Task"</span>)</span><br><span class="line">    db_alias = schema_editor.connection.alias</span><br><span class="line">    Task.objects.using(db_alias).filter(name=<span class="string">"task1"</span>).delete()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Migration</span><span class="params">(migrations.Migration)</span>:</span></span><br><span class="line">    dependencies = [</span><br><span class="line">        (<span class="string">'mysite'</span>, <span class="string">'0001_initial'</span>),</span><br><span class="line">    ]</span><br><span class="line"></span><br><span class="line">    operations = [</span><br><span class="line">        migrations.RunPython(insert_task, rollback_task),</span><br><span class="line">    ]</span><br></pre></td></tr></table></figure>
+
+<p>每次迁移，Django都会存有记录，能够判断当前已经执行的操作，待执行的操作，存在风险的操作等。可以使用 <code>showmigrations</code> 查看当前各个应用的数据库迁移脚本执行情况：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python manage.py showmigrations</span><br></pre></td></tr></table></figure>
+
+<h3 id="View"><a href="#View" class="headerlink" title="View"></a>View</h3><p>Django 是 MVT 模式，View 相当于 MVC 设计模式中的 Controller(控制器) 而非 View(视图)。真正的视图由 Template(模版)或者静态资源提供。</p>
+<p>既然作为控制器，那么 View 的功能就相对清晰了：对接收到的请求数据（Request）做相应处理，并返回处理结果数据（Response）。</p>
+<p>View 可以是类，也可以是函数+View装饰器的模式，直接上官方文档的代码吧：</p>
+<p>基于类的 View:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> django.http <span class="keyword">import</span> HttpResponse</span><br><span class="line"><span class="keyword">from</span> django.views.generic <span class="keyword">import</span> ListView</span><br><span class="line"><span class="keyword">from</span> books.models <span class="keyword">import</span> Book</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">BookListView</span><span class="params">(ListView)</span>:</span></span><br><span class="line">    model = Book</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">head</span><span class="params">(self, *args, **kwargs)</span>:</span></span><br><span class="line">        last_book = self.get_queryset().latest(<span class="string">'publication_date'</span>)</span><br><span class="line">        response = HttpResponse(<span class="string">''</span>)</span><br><span class="line">        <span class="comment"># RFC 1123 date format</span></span><br><span class="line">        response[<span class="string">'Last-Modified'</span>] = last_book.publication_date.strftime(<span class="string">'%a, %d %b %Y %H:%M:%S GMT'</span>)</span><br><span class="line">        <span class="keyword">return</span> response</span><br></pre></td></tr></table></figure>
+
+<p>基于装饰器的 View:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> django.views.decorators.http <span class="keyword">import</span> require_http_methods</span><br><span class="line"></span><br><span class="line"><span class="meta">@require_http_methods(["GET", "POST"])</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">my_view</span><span class="params">(request)</span>:</span></span><br><span class="line">    <span class="comment"># I can assume now that only GET or POST requests make it this far</span></span><br><span class="line">    <span class="comment"># ...</span></span><br><span class="line">    <span class="keyword">pass</span></span><br></pre></td></tr></table></figure>
+
+<p>这部分更多地涉及到业务逻辑，不够通用因此不多赘述了。</p>
+<h3 id="URL"><a href="#URL" class="headerlink" title="URL"></a>URL</h3><p>URL 模块定义了 View 的路由地址：</p>
+<p><em>mysite/urls.py</em></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> django.urls <span class="keyword">import</span> path</span><br><span class="line"><span class="keyword">from</span> books.views <span class="keyword">import</span> BookListView</span><br><span class="line"></span><br><span class="line">urlpatterns = [</span><br><span class="line">    path(<span class="string">'books/'</span>, BookListView.as_view()),</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+
+<p>可以配置多层路由，然后在最上层 URL 使用 <code>includes</code> 为子路由添加 Prefix:</p>
+<p><em>myproject/urls.py</em></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">path(<span class="string">'api/v1/'</span>, include(<span class="string">'mysite.urls'</span>)),</span><br></pre></td></tr></table></figure>
+
+<h3 id="Test"><a href="#Test" class="headerlink" title="Test"></a>Test</h3><p>作为测试开发工程师，对单元测试模块还是需要了解下的（可惜目前正处于开发前期，测试用例可能需要在项目基本稳定之后再补充了）。</p>
+<p>和大部分 Web 框架一样，Django 的测试模块也是提供了一个 HTTP Client，使用类似接口测试的模式进行“单元测试”。</p>
+<p>我在编写 Tornado 单元测试基础框架时候，是将 Tornado 与数据库的连接 Mock 掉，实际并未操作数据库。但在 Django 中，由于数据库的连接并非由我自己实现，也因为使用了 ORM 模式，所以想真正与其他服务解耦进行单测有些困难，目前就先保持这种测试模式了。</p>
+<p>还是以官方示例代码为例吧，编写一个测试套件类：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> unittest</span><br><span class="line"><span class="keyword">from</span> django.test <span class="keyword">import</span> Client</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">SimpleTest</span><span class="params">(unittest.TestCase)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">setUp</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="comment"># Every test needs a client.</span></span><br><span class="line">        self.client = Client()</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">test_details</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="comment"># Issue a GET request.</span></span><br><span class="line">        response = self.client.get(<span class="string">'/customer/details/'</span>)</span><br><span class="line"></span><br><span class="line">        <span class="comment"># Check that the response is 200 OK.</span></span><br><span class="line">        self.assertEqual(response.status_code, <span class="number">200</span>)</span><br><span class="line"></span><br><span class="line">        <span class="comment"># Check that the rendered context contains 5 customers.</span></span><br><span class="line">        self.assertEqual(len(response.context[<span class="string">'customers'</span>]), <span class="number">5</span>)</span><br></pre></td></tr></table></figure>
+
+<p>运行单元测试：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python manage.py <span class="built_in">test</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="代码目录结构"><a href="#代码目录结构" class="headerlink" title="代码目录结构"></a>代码目录结构</h3><p>在我接手该项目时候，大部分的代码都糅合在一个 Python 文件中，让我有代码洁癖的人看着着实难受。</p>
+<p>因为我自己也是才接触 Django，为了数理目录结构我也踩了不少坑，包括将各个模块拆分成不同的应用等骚操作…</p>
+<p>我就直接分享我目前正在使用的大致代码结构吧：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">myapp&#x2F;          # 存放应用具体实现的代码等</span><br><span class="line">    app_mod1&#x2F;</span><br><span class="line">        models.py</span><br><span class="line">        views.py</span><br><span class="line">    app_mod2&#x2F;</span><br><span class="line">        models.py</span><br><span class="line">        views.py</span><br><span class="line">    admin.py</span><br><span class="line">    app.py</span><br><span class="line">    models.py</span><br><span class="line">    views.py</span><br><span class="line">    urls.py</span><br><span class="line">myproject&#x2F;      # 存放项目配置文件</span><br><span class="line">    settings.py</span><br><span class="line">    urls.py</span><br><span class="line">dockerfiles&#x2F;    # 存放前后端Dockerfile</span><br><span class="line">docs&#x2F;           # 存放项目相关的文档</span><br><span class="line">tests&#x2F;          # 存放测试套件</span><br><span class="line">manage.py</span><br><span class="line">README.md</span><br></pre></td></tr></table></figure>
+
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>在这个项目中，我还引入了 Django-REST-Framework(DRF) 框架的序列化和分页模块，Django-MySQL 对 JSON/List 格式数据的支持，以及 Celery 实现异步与定时任务等操作，整体来说两周时间对 Django 以及扩展模块的学习算是满意，不过背后也是我每天下班继续工作到11点，周末在家查文档学习的辛苦。</p>
+<p>Django 本身功能强大，是一个非常成熟的 Web 开发框架，但是上手有一定难度，需要下功夫好好消化官方文档阅读源码，并且应用在自己的项目中。</p>
+<blockquote>
+<p>后期会继续分享本项目开发过程中的一些经验技巧，欢迎持续关注！可私聊加群。</p>
+</blockquote>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ol>
+<li><a href="https://www.djangoproject.com/" target="_blank" rel="noopener">Django 官方文档</a></li>
+</ol>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Python/" rel="tag"># Python</a>
+          
+            <a href="/tags/Django/" rel="tag"># Django</a>
+          
+            <a href="/tags/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/" rel="tag"># 后端开发</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/03/28/2019-03-28-Cross-browser-testing-with-selenium/" rel="next" title="浏览器兼容性测试设计与原理剖析">
+                <i class="fa fa-chevron-left"></i> 浏览器兼容性测试设计与原理剖析
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/06/09/2019-06-09-Django-sso-with-cas/" rel="prev" title="Django - 集成CAS单点登录">
+                Django - 集成CAS单点登录 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar-me.jpg"
+                alt="严北" />
+            
+              <p class="site-author-name" itemprop="name">严北</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%7C%7Carchive">
+              
+                  <span class="site-state-item-count">28</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">10</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">34</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/ityoung" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://juejin.im/user/5a9ea689f265da23906b89e1" target="_blank" title="掘金">
+                      
+                        <i class="fa fa-fw fa-custom icon-juejin"></i>掘金</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#初识-Django"><span class="nav-number">1.</span> <span class="nav-text">初识 Django</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Django-几个模块用法"><span class="nav-number">2.</span> <span class="nav-text">Django 几个模块用法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#manage-py"><span class="nav-number">2.1.</span> <span class="nav-text">manage.py</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Project-与-App"><span class="nav-number">2.2.</span> <span class="nav-text">Project 与 App</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Model"><span class="nav-number">2.3.</span> <span class="nav-text">Model</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Migration"><span class="nav-number">2.4.</span> <span class="nav-text">Migration</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#View"><span class="nav-number">2.5.</span> <span class="nav-text">View</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#URL"><span class="nav-number">2.6.</span> <span class="nav-text">URL</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Test"><span class="nav-number">2.7.</span> <span class="nav-text">Test</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#代码目录结构"><span class="nav-number">2.8.</span> <span class="nav-text">代码目录结构</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">3.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">4.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">严北</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+          <span id="scrollpercent"><span>0</span>%</span>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

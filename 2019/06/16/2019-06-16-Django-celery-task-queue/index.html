@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Python,Django,后端开发," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="背景在开发中，我们常常会遇到一些耗时任务，举个例子： 上传并解析一个 1w 条数据的 Excel 文件，最后持久化至数据库。 在我的程序中，这个任务耗时大约 6s，对于用户来说，6s 的等待已经是个灾难了。 比较好的处理方式是：  接收这个任务的请求 将这个任务添加到队列中 立即返回「操作成功，正在后台处理」的字样 后台消费这个队列，执行这个任务  我们按照这个思路，借助 Celery 进行实现。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Django - Celery异步任务队列">
+<meta property="og:url" content="http://intest.tech/2019/06/16/2019-06-16-Django-celery-task-queue/index.html">
+<meta property="og:site_name" content="Shin&#39;s Blog">
+<meta property="og:description" content="背景在开发中，我们常常会遇到一些耗时任务，举个例子： 上传并解析一个 1w 条数据的 Excel 文件，最后持久化至数据库。 在我的程序中，这个任务耗时大约 6s，对于用户来说，6s 的等待已经是个灾难了。 比较好的处理方式是：  接收这个任务的请求 将这个任务添加到队列中 立即返回「操作成功，正在后台处理」的字样 后台消费这个队列，执行这个任务  我们按照这个思路，借助 Celery 进行实现。">
+<meta property="article:published_time" content="2019-06-15T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-03-19T05:22:27.711Z">
+<meta property="article:author" content="严北">
+<meta property="article:tag" content="Python">
+<meta property="article:tag" content="Django">
+<meta property="article:tag" content="后端开发">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://intest.tech/2019/06/16/2019-06-16-Django-celery-task-queue/"/>
+
+
+
+
+
+  <title>Django - Celery异步任务队列 | Shin's Blog</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Shin's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Aims at Test Architect</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://intest.tech/2019/06/16/2019-06-16-Django-celery-task-queue/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="严北">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar-me.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Shin's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Django - Celery异步任务队列</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-06-16T00:00:00+08:00">
+                2019-06-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Python/" itemprop="url" rel="index">
+                    <span itemprop="name">Python</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>在开发中，我们常常会遇到一些耗时任务，举个例子：</p>
+<p>上传并解析一个 1w 条数据的 Excel 文件，最后持久化至数据库。</p>
+<p>在我的程序中，这个任务耗时大约 6s，对于用户来说，6s 的等待已经是个灾难了。</p>
+<p>比较好的处理方式是：</p>
+<ol>
+<li>接收这个任务的请求</li>
+<li>将这个任务添加到队列中</li>
+<li>立即返回「操作成功，正在后台处理」的字样</li>
+<li>后台消费这个队列，执行这个任务</li>
+</ol>
+<p>我们按照这个思路，借助 Celery 进行实现。</p>
+<a id="more"></a>
+
+<h2 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h2><blockquote>
+<p>本文所使用的环境如下：</p>
+<ul>
+<li>Python 3.6.7</li>
+<li>RabbitMQ 3.8</li>
+<li>Celery 4.3</li>
+</ul>
+</blockquote>
+<h3 id="使用-Docker-安装-RabbitMQ"><a href="#使用-Docker-安装-RabbitMQ" class="headerlink" title="使用 Docker 安装 RabbitMQ"></a>使用 Docker 安装 RabbitMQ</h3><p>Celery 依赖一个消息后端，可选方案有 RabbitMQ, Redis 等，本文选用 RabbitMQ 。</p>
+<p>同时为了安装方便，RabbitMQ 我直接使用 Docker 安装：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -d --name anno-rabbit -p 5672:5672 rabbitmq:3</span><br></pre></td></tr></table></figure>
+
+<p>启动成功后，即可通过 <code>amqp://localhost</code> 访问该消息队列。</p>
+<h3 id="安装并配置-Celery"><a href="#安装并配置-Celery" class="headerlink" title="安装并配置 Celery"></a>安装并配置 Celery</h3><p>Celery 是 Python 实现的工具，安装可以直接通过 Pip 完成：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install celery</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>同时假设当前我的项目文件夹为 <code>proj</code> ，项目名为 <code>myproj</code> ，应用名为 <code>myapp</code></p>
+</blockquote>
+<p>安装完成后，在 <code>proj/myproj/</code> 路径下创建一个 <code>celery.py</code> 文件，用来初始化 Celery 实例：</p>
+<p><em>proj/myproj/celery.py</em></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> __future__ <span class="keyword">import</span> absolute_import, unicode_literals</span><br><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">from</span> celery <span class="keyword">import</span> Celery, platforms</span><br><span class="line"></span><br><span class="line"><span class="comment"># set the default Django settings module for the 'celery' program.</span></span><br><span class="line">os.environ.setdefault(<span class="string">'DJANGO_SETTINGS_MODULE'</span>, <span class="string">'myproj.settings'</span>)</span><br><span class="line"></span><br><span class="line">app = Celery(<span class="string">'myproj'</span>,</span><br><span class="line">             broker=<span class="string">'amqp://localhost//'</span>,</span><br><span class="line">             backend=<span class="string">'amqp://localhost//'</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># Using a string here means the worker don't have to serialize</span></span><br><span class="line"><span class="comment"># the configuration object to child processes.s</span></span><br><span class="line"><span class="comment"># - namespace='CELERY' means all celery-related configuration keys</span></span><br><span class="line"><span class="comment">#   should have a `CELERY_` prefix.</span></span><br><span class="line">app.config_from_object(<span class="string">'django.conf:settings'</span>, namespace=<span class="string">'CELERY'</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># Load task modules from all registered Django app configs.</span></span><br><span class="line">app.autodiscover_tasks()</span><br></pre></td></tr></table></figure>
+
+<p>然后在 <code>proj/myproj/__init__.py</code> 中添加对 Celery 对象的引用，确保 Django 启动后能够初始化 Celery：</p>
+<p><em>proj/myproj/__init_\</em>.py_</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> __future__ <span class="keyword">import</span> absolute_import, unicode_literals</span><br><span class="line"></span><br><span class="line"><span class="comment"># This will make sure the app is always imported when</span></span><br><span class="line"><span class="comment"># Django starts so that shared_task will use this app.</span></span><br><span class="line"><span class="keyword">from</span> .celery <span class="keyword">import</span> app <span class="keyword">as</span> celery_app</span><br><span class="line"></span><br><span class="line">__all__ = (<span class="string">'celery_app'</span>,)</span><br></pre></td></tr></table></figure>
+
+<p>无其他特殊配置的话，Celery 的基本配置就是这些。</p>
+<h3 id="编写一个耗时任务"><a href="#编写一个耗时任务" class="headerlink" title="编写一个耗时任务"></a>编写一个耗时任务</h3><p>为了模拟一个耗时任务，我们直接创建一个方法，使其「睡」10s ，并将其设置为 Celery 的任务：</p>
+<p><em>proj/myapp/tasks.py</em></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> time</span><br><span class="line"><span class="keyword">from</span> myproj.celery <span class="keyword">import</span> app <span class="keyword">as</span> celery_app</span><br><span class="line"></span><br><span class="line"><span class="meta">@celery_app.task</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">waste_time</span><span class="params">()</span>:</span></span><br><span class="line">    time.sleep(<span class="number">10</span>)</span><br><span class="line">    <span class="keyword">return</span> <span class="string">"Run function 'waste_time' finished."</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="启动-Celery-Worker"><a href="#启动-Celery-Worker" class="headerlink" title="启动 Celery Worker"></a>启动 Celery Worker</h3><p>Celery 配置完成，并且任务创建成功后，我们以<strong>异步任务的模式</strong>启动 Celery ：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">celery -A myproj worker -l info</span><br></pre></td></tr></table></figure>
+
+<p>注意到我强调了<strong>异步模式</strong>，是因为 Celery 除了支持异步任务，还支持定时任务，因此启动时候要指明。</p>
+<p>同时要注意，Celery 一旦启动，对 Task(此处为 <code>waste_time</code>) 的修改必须重启 Celery 才会生效。</p>
+<h3 id="任务调用"><a href="#任务调用" class="headerlink" title="任务调用"></a>任务调用</h3><p>在请求处理的逻辑代码中，调用上面创建好的任务：</p>
+<p><em>proj/myapp/views.py</em></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> django.http <span class="keyword">import</span> JsonResponse</span><br><span class="line"><span class="keyword">from</span> django.views.decorators.http <span class="keyword">import</span> require_http_methods</span><br><span class="line"><span class="keyword">from</span> .tasks <span class="keyword">import</span> waste_time</span><br><span class="line"></span><br><span class="line"><span class="meta">@require_http_methods(["POST"])</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">upload_files</span><span class="params">(request)</span>:</span></span><br><span class="line">    waste_time.delay()</span><br><span class="line">    <span class="comment"># Status code 202: Accepted, 表示异步任务已接受，可能还在处理中</span></span><br><span class="line">    <span class="keyword">return</span> JsonResponse(&#123;<span class="string">"results"</span>: <span class="string">"操作成功，正在上传，请稍候..."</span>&#125;, status=<span class="number">202</span>)</span><br></pre></td></tr></table></figure>
+
+<p>调用 <code>waste_time.delay()</code> 方法后， <code>waste_time</code> 会被加入到任务队列中，等待空闲的 Celery Worker 调用。</p>
+<h3 id="效果"><a href="#效果" class="headerlink" title="效果"></a>效果</h3><p>当我们发送请求时，这个接口会直接返回 <code>{&quot;results&quot;: &quot;操作成功，正在上传，请稍候...&quot;}</code> 的响应内容而非卡住十秒，用户体验要好许多。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>用 Celery 处理这种异步任务是 Python 常用的方法，虽然实际执行成功耗时不变甚至有所增加（如 Worker 繁忙导致处理滞后），但是对于用户体验来说更容易接受，点击上传大文件后可以继续处理其他事务，而不需要在页面等待。</p>
+<p>Celery 还有更多用法本文未介绍到，其文档已经非常详尽，有需要可直接参考。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li><a href="http://docs.celeryproject.org/en/latest/django/first-steps-with-django.html" target="_blank" rel="noopener">http://docs.celeryproject.org/en/latest/django/first-steps-with-django.html</a></li>
+<li><a href="https://hub.docker.com/_/rabbitmq" target="_blank" rel="noopener">https://hub.docker.com/_/rabbitmq</a></li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Python/" rel="tag"># Python</a>
+          
+            <a href="/tags/Django/" rel="tag"># Django</a>
+          
+            <a href="/tags/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/" rel="tag"># 后端开发</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/06/11/2019-06-11-Django-natural-key-serialization/" rel="next" title="Django - 模型序列化返回自然主键值">
+                <i class="fa fa-chevron-left"></i> Django - 模型序列化返回自然主键值
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/06/22/2019-06-22-Docker-swarm-in-action/" rel="prev" title="用Docker swarm实现容器服务高可用">
+                用Docker swarm实现容器服务高可用 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar-me.jpg"
+                alt="严北" />
+            
+              <p class="site-author-name" itemprop="name">严北</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%7C%7Carchive">
+              
+                  <span class="site-state-item-count">28</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">10</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">34</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/ityoung" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://juejin.im/user/5a9ea689f265da23906b89e1" target="_blank" title="掘金">
+                      
+                        <i class="fa fa-fw fa-custom icon-juejin"></i>掘金</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#背景"><span class="nav-number">1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#实现"><span class="nav-number">2.</span> <span class="nav-text">实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#使用-Docker-安装-RabbitMQ"><span class="nav-number">2.1.</span> <span class="nav-text">使用 Docker 安装 RabbitMQ</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#安装并配置-Celery"><span class="nav-number">2.2.</span> <span class="nav-text">安装并配置 Celery</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#编写一个耗时任务"><span class="nav-number">2.3.</span> <span class="nav-text">编写一个耗时任务</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#启动-Celery-Worker"><span class="nav-number">2.4.</span> <span class="nav-text">启动 Celery Worker</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#任务调用"><span class="nav-number">2.5.</span> <span class="nav-text">任务调用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#效果"><span class="nav-number">2.6.</span> <span class="nav-text">效果</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">3.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">4.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">严北</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+          <span id="scrollpercent"><span>0</span>%</span>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
